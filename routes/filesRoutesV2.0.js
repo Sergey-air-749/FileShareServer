@@ -13,7 +13,7 @@ const {
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner')
 const multerS3 = require('multer-s3')
 
-const Users = require('../moduls/users')
+const Users = require('../moduls/Users')
 
 const authMidelwares = require('../midelwares/authMidelwares')
 const multer = require('multer');

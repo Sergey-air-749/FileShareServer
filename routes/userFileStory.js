@@ -2,7 +2,7 @@ const express = require('express')
 const router = express.Router()
 require('dotenv').config();
 
-const Users = require('../moduls/users')
+const Users = require('../moduls/Users')
 const authMidelwares = require('../midelwares/authMidelwares')
 
 

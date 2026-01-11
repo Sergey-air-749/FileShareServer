@@ -4,7 +4,7 @@ require('dotenv').config();
 const path = require('path');
 const nodemailer = require('nodemailer')
 
-const Users = require('../moduls/users')
+const Users = require('../moduls/Users')
 
 const authMidelwares = require('../midelwares/authMidelwares')
 const cron = require("node-cron");

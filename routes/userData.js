@@ -6,7 +6,7 @@ const router = express.Router()
 require('dotenv').config();
 const path = require('path');
 
-const Users = require('../moduls/users')
+const Users = require('../moduls/Users')
 
 const authMidelwares = require('../midelwares/authMidelwares');
 const { S3Client, DeleteObjectCommand } = require('@aws-sdk/client-s3');
