@@ -5,8 +5,8 @@ const cors = require('cors')
 
 const app = express()
 require('dotenv').config();
-const { createServer } = require('http');
-const { Server } = require('socket.io');
+// const { createServer } = require('http');
+// const { Server } = require('socket.io');
 
 const os = require('os');
 
@@ -17,37 +17,37 @@ const filesRoutes = require('./routes/filesRoutesV2.0')
 const userData = require('./routes/userData')
 const userFileStory = require('./routes/userFileStory');
 
-const server = createServer();
-const io = new Server(server);
+// const server = createServer();
+// const io = new Server(server);
 
 
-io.on('connection', async (socket) => {
-    console.log('a user connected');
+// io.on('connection', async (socket) => {
+//     console.log('a user connected');
 
-    socket.on('disconnect', () => {
-        console.log('user disconnected');
-    });
+//     socket.on('disconnect', () => {
+//         console.log('user disconnected');
+//     });
 
-    socket.on('pingfilesShareId', async (shareId) => {
-        socket.join(shareId);
+//     socket.on('pingfilesShareId', async (shareId) => {
+//         socket.join(shareId);
 
-        const user = await users.findOne({shareId: shareId}) 
-        const files = user.filse
+//         const user = await users.findOne({shareId: shareId}) 
+//         const files = user.filse
         
-        io.to(shareId).emit("files", files);
-    });
+//         io.to(shareId).emit("files", files);
+//     });
 
-    socket.on('pingfilesUserName', async (username) => {
-        const user = await users.findOne({username: username}) 
+//     socket.on('pingfilesUserName', async (username) => {
+//         const user = await users.findOne({username: username}) 
 
-        socket.join(user.shareId);
+//         socket.join(user.shareId);
 
-        const files = user.filse
+//         const files = user.filse
         
-        io.to(user.shareId).emit("files", files);
-    });
+//         io.to(user.shareId).emit("files", files);
+//     });
 
-});
+// });
 
 
 app.use(cors())
@@ -71,9 +71,9 @@ mongoose.connect(process.env.MONGO_URI)
 
 
 
-server.listen(process.env.PORT_SOKET, () => {
-    console.log("Soket IO http://localhost:" + process.env.PORT_SOKET);
-});
+// server.listen(process.env.PORT_SOKET, () => {
+//     console.log("Soket IO http://localhost:" + process.env.PORT_SOKET);
+// });
 
 app.listen(process.env.PORT_API, () => {
     console.log("API http://localhost:" + process.env.PORT_API);
