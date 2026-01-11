@@ -18,14 +18,7 @@ const userData = require('./routes/userData')
 const userFileStory = require('./routes/userFileStory');
 
 const server = createServer();
-const io = new Server(server, {
-    connectionStateRecovery: {},
-    cors: {
-        // Разрешаем подключения с клиентского домена/порта
-        origin: "http://localhost:3000", // <-- Не в коем случи не ставить в конце "/" !!!!!!
-        methods: ["GET", "POST"],
-    }
-});
+const io = new Server(server);
 
 
 io.on('connection', async (socket) => {
@@ -57,9 +50,7 @@ io.on('connection', async (socket) => {
 });
 
 
-app.use(cors({
-    origin: 'http://localhost:3000' 
-}))
+app.use(cors())
 
 app.use(express.json());
 app.use(express.json({ limit: '1000mb' }));
