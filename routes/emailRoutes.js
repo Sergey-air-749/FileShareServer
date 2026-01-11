@@ -35,6 +35,9 @@ async function sendVerificationSingUpCode(recipientEmail, code) {
         console.error('Ошибка при отправке почты:', error);
         throw new Error('Не удалось отправить код подтверждения');
     }
+
+    console.log('Письмо отправлено на почту: ' + recipientEmail);
+    
 }
 
 async function sendVerificationСhangeCode(recipientEmail, code) {
@@ -53,6 +56,8 @@ async function sendVerificationСhangeCode(recipientEmail, code) {
         console.error('Ошибка при отправке почты:', error);
         throw new Error('Не удалось отправить код подтверждения');
     }
+
+    console.log('Письмо отправлено на почту: ' + recipientEmail);
 }
 
 
