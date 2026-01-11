@@ -11,7 +11,10 @@ const cron = require("node-cron");
 
 
 let transporter = nodemailer.createTransport({
-    service: 'gmail',
+    // service: 'gmail',
+    host: 'smtp.gmail.com', // Например, 'smtp.sendgrid.net'
+    port: 587, // Например, 587
+    secure: false,
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
