@@ -55,12 +55,24 @@ router.get('/getUserDataById/:id', async (req, res, next) => {
 
         if (user != null) {
 
-            const newUser = {
-                username: user.username,
-                avatar: user.avatar
-            }
+            if (!user.isGuest) {
+
+                const newUser = {
+                    username: user.username,
+                    avatar: user.avatar
+                }
     
-            res.status(200).json(newUser)
+                res.status(200).json(newUser)
+
+            } else {
+                
+                const newUser = {
+                    isGuest: user.isGuest
+                }
+    
+                res.status(200).json(newUser)
+
+            }
           
         } else {
             res.status(400).json({msg: 'Пользователь не найден'})
