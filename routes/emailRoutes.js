@@ -26,7 +26,7 @@ let transporter = nodemailer.createTransport({
 
 async function sendVerificationSingUpCode(recipientEmail, code) {
     let mailOptions = {
-        from: '"Ваше приложение" <sergeymishin749@gmail.com>',
+        from: '"Ваше приложение" <no-reply@yourdomain.com>',
         to: recipientEmail,
         subject: 'Подтверждение адреса электронной почты',
         text: `Ваш код подтверждения: ${code}. Он действует 10 минут.`,
@@ -48,7 +48,7 @@ async function sendVerificationSingUpCode(recipientEmail, code) {
 
 async function sendVerificationСhangeCode(recipientEmail, code) {
     let mailOptions = {
-        from: '"Ваше приложение" <sergeymishin749@gmail.com>',
+        from: '"Ваше приложение" <no-reply@yourdomain.com>',
         to: recipientEmail,
         subject: 'Подтверждение адреса электронной почты',
         text: `Ваш код подтверждения: ${code}. Он действует 10 минут.`,
@@ -72,7 +72,7 @@ router.get('/email/test/:email', async (req, res) => {
     const { email } = req.params
 
     let mailOptions = {
-        from: '"Ваше приложение" <sergeymishin749@gmail.com>',
+        from: '"Ваше приложение" <no-reply@yourdomain.com>',
         to: email,
         subject: 'Подтверждение адреса электронной почты',
         text: `Ваш код подтверждения: ${email}. Он действует 10 минут.`,
@@ -87,7 +87,7 @@ router.get('/email/test/:email', async (req, res) => {
 
 router.get('/email/test', async (req, res) => {
     let mailOptions = {
-        from: '"Ваше приложение" <sergeymishin749@gmail.com>',
+        from: '"Ваше приложение" <no-reply@yourdomain.com>',
         to: 'sergeymishin749@gmail.com',
         subject: 'Подтверждение адреса электронной почты',
         text: `Ваш код подтверждения: 00000000000. Он действует 10 минут.`,
@@ -187,11 +187,11 @@ router.get('/:option/email/new', authMidelwares, async (req, res) => {
 
         if (option == 'change') {
 
-            sendVerificationСhangeCode(user.emailNew, code)
+            await sendVerificationСhangeCode(user.emailNew, code)
 
         } else if (option == 'signup') {
 
-            sendVerificationSingUpCode(user.email, code)
+            await sendVerificationSingUpCode(user.email, code)
 
         } else {
             res.status(400).json({msg:'Ошибка при отправке, повторите попытку'});
@@ -228,7 +228,7 @@ router.get('/:option/email/cancel', authMidelwares, async (req, res) => {
 
         } else if (option == 'signup') {
 
-            const userDel = await Users.findByIdAndDelete({_id: userId})
+            const userDel = await Users.findByIdAndDelete({_id: userId}) //обезательно доделать
 
         } else {
             res.status(400).json({msg:'Ошибка при отмене, повторите попытку'});

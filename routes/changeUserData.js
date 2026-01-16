@@ -50,7 +50,7 @@ let transporter = nodemailer.createTransport({
 
 async function sendVerificationСhangeCode(recipientEmail, code) {
     let mailOptions = {
-        from: '"Ваше приложение" <sergeymishin749@gmail.com>',
+        from: '"Ваше приложение" <no-reply@yourdomain.com>',
         to: recipientEmail,
         subject: 'Подтверждение смены адреса электронной почты',
         text: `Ваш код подтверждения: ${code}. Он действует 10 минут.`,
@@ -220,7 +220,7 @@ router.put('/change/email', authMidelwares, async (req, res) => {
             user.emailNew = emailNew
             await user.save()
 
-            sendVerificationСhangeCode(user.emailNew, code)
+            await sendVerificationСhangeCode(user.emailNew, code)
 
             res.status(200).json({msg:'Код отправлен'});   
         } else {

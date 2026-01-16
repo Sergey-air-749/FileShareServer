@@ -24,7 +24,7 @@ let transporter = nodemailer.createTransport({
 async function sendVerificationSingUpCode(recipientEmail, code) {
     let mailOptions = {
         // from: '"Ваше приложение" <no-reply@yourdomain.com>',
-        from: '"Ваше приложение" <sergeymishin749@gmail.com>',
+        from: '"Ваше приложение" <no-reply@yourdomain.com>',
         to: recipientEmail,
         subject: 'Подтверждение адреса электронной почты',
         text: `Ваш код подтверждения: ${code}. Он действует 10 минут.`,
@@ -89,7 +89,7 @@ router.post('/signup', async (req, res) => {
             await newUser.save()
             console.log(newUser);
 
-            sendVerificationSingUpCode(email, code)
+            await sendVerificationSingUpCode(email, code)
             
             const token = jwt.sign({id: newUser._id}, process.env.JWT_SECRET_KEY, {expiresIn: "24h"})
             res.status(200).json({token: token})
@@ -166,7 +166,7 @@ router.post('/login', async (req, res) => {
                 userData.verificationCode = code,
                 userData.codeExpires = expirationTime,
 
-                sendVerificationSingUpCode(email, code)
+                await sendVerificationSingUpCode(email, code)
 
                 await userData.save()
 
@@ -200,7 +200,7 @@ router.post('/login/resetpassword', async (req, res) => {
             userData.verificationCode = code,
             userData.codeExpires = expirationTime,
 
-            sendVerificationSingUpCode(email, code)
+            await sendVerificationSingUpCode(email, code)
 
             await userData.save()
 
