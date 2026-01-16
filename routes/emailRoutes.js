@@ -247,7 +247,7 @@ cron.schedule("0 0 * * * *", async () => {
 
         const users = await Users.find()
         
-        users.forEach(async (user, index) => { 
+        for (const user of users) {
             
             const expirationTime = new Date(user.codeExpires)
 
@@ -262,7 +262,7 @@ cron.schedule("0 0 * * * *", async () => {
                 console.log("Код потвирждения удалён:", user.username);
             }
 
-        });
+        }
 
     } catch (error) {
         console.log(error);   
@@ -275,7 +275,7 @@ async function init() {
 
         const users = await Users.find()
         
-        users.forEach(async (user, index) => { 
+        for (const user of users) {
             
             const expirationTime = new Date(user.codeExpires)
 
@@ -290,7 +290,7 @@ async function init() {
                 console.log("Код потвирждения удалён:", user.username);
             }
 
-        });
+        };
 
     } catch (error) {
         console.log(error);   

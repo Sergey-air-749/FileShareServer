@@ -66,7 +66,9 @@ app.use(express.urlencoded({ limit: '1000mb', extended: true }));
 app.use('/api', emailRoutes, changeUserData, filesRoutes, userData, userFileStory, authRoutes)
 
 
-
+mongoose.connect(process.env.MONGODB_URI, {
+  serverSelectionTimeoutMS: 60000, // 20 секунд вместо 10
+});
 
 mongoose.connect(process.env.MONGO_URI)
     .then(() => {
