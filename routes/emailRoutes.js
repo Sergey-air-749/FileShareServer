@@ -26,7 +26,7 @@ let transporter = nodemailer.createTransport({
 
 async function sendVerificationSingUpCode(recipientEmail, code) {
     let mailOptions = {
-        from: '"Ваше приложение" <no-reply@yourdomain.com>',
+        from: '"Ваше приложение" <sergeymishin749@gmail.com>',
         to: recipientEmail,
         subject: 'Подтверждение адреса электронной почты',
         text: `Ваш код подтверждения: ${code}. Он действует 10 минут.`,
@@ -48,7 +48,7 @@ async function sendVerificationSingUpCode(recipientEmail, code) {
 
 async function sendVerificationСhangeCode(recipientEmail, code) {
     let mailOptions = {
-        from: '"Ваше приложение" <no-reply@yourdomain.com>',
+        from: '"Ваше приложение" <sergeymishin749@gmail.com>',
         to: recipientEmail,
         subject: 'Подтверждение адреса электронной почты',
         text: `Ваш код подтверждения: ${code}. Он действует 10 минут.`,
@@ -72,7 +72,7 @@ router.get('/email/test/:email', async (req, res) => {
     const { email } = req.params
 
     let mailOptions = {
-        from: '"Ваше приложение" <no-reply@yourdomain.com>',
+        from: '"Ваше приложение" <sergeymishin749@gmail.com>',
         to: email,
         subject: 'Подтверждение адреса электронной почты',
         text: `Ваш код подтверждения: ${email}. Он действует 10 минут.`,
@@ -87,7 +87,7 @@ router.get('/email/test/:email', async (req, res) => {
 
 router.get('/email/test', async (req, res) => {
     let mailOptions = {
-        from: '"Ваше приложение" <no-reply@yourdomain.com>',
+        from: '"Ваше приложение" <sergeymishin749@gmail.com>',
         to: 'sergeymishin749@gmail.com',
         subject: 'Подтверждение адреса электронной почты',
         text: `Ваш код подтверждения: 00000000000. Он действует 10 минут.`,

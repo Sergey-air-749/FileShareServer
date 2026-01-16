@@ -23,7 +23,8 @@ let transporter = nodemailer.createTransport({
 
 async function sendVerificationSingUpCode(recipientEmail, code) {
     let mailOptions = {
-        from: '"Ваше приложение" <no-reply@yourdomain.com>',
+        // from: '"Ваше приложение" <no-reply@yourdomain.com>',
+        from: '"Ваше приложение" <sergeymishin749@gmail.com>',
         to: recipientEmail,
         subject: 'Подтверждение адреса электронной почты',
         text: `Ваш код подтверждения: ${code}. Он действует 10 минут.`,
@@ -32,7 +33,7 @@ async function sendVerificationSingUpCode(recipientEmail, code) {
     
     await transporter.sendMail(mailOptions);
     console.log('Код подтверждения отправлен на:', recipientEmail);
-    
+
     // try {
     // } catch (error) {
     //     console.error('Ошибка при отправке почты:', error);
