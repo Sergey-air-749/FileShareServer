@@ -166,8 +166,8 @@ router.post('/login', async (req, res) => {
                 userData.verificationCode = code,
                 userData.codeExpires = expirationTime,
 
-                await sendVerificationSingUpCode(email, code)
-
+                await sendVerificationSingUpCode(userData.email, code)
+                
                 await userData.save()
 
 
