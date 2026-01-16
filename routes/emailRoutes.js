@@ -71,7 +71,7 @@ router.get('/email/test/:email', async (req, res) => {
 
     let mailOptions = {
         from: '"Ваше приложение" <no-reply@yourdomain.com>',
-        to: 'sergeymishin749@gmail.com',
+        to: email,
         subject: 'Подтверждение адреса электронной почты',
         text: `Ваш код подтверждения: ${email}. Он действует 10 минут.`,
         html: `<p>Ваш код подтверждения: <b>${email}</b>. Он действует 10 минут.</p>`
