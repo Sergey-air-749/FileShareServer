@@ -12,14 +12,16 @@ const cron = require("node-cron");
 
 let transporter = nodemailer.createTransport({
     // service: 'gmail',
-    host: 'smtp.gmail.com', // Например, 'smtp.sendgrid.net'
-    port: 587, // Например, 587
-    secure: false,
+    host: 'smtp.gmail.com',
+    port: 465, 
+    secure: true,
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
     }
 });
+
+
 
 
 async function sendVerificationSingUpCode(recipientEmail, code) {
@@ -63,6 +65,20 @@ async function sendVerificationСhangeCode(recipientEmail, code) {
     console.log('Письмо отправлено на почту: ' + recipientEmail);
 }
 
+
+router.get('/email/test', async (req, res) => {
+    let mailOptions = {
+        from: '"Ваше приложение" <no-reply@yourdomain.com>',
+        to: recipientEmail,
+        subject: 'Подтверждение адреса электронной почты',
+        text: `Ваш код подтверждения: 00000000000. Он действует 10 минут.`,
+        html: `<p>Ваш код подтверждения: <b>00000000000</b>. Он действует 10 минут.</p>`
+    };
+
+    await transporter.sendMail(mailOptions);
+
+    res.status(200).json({msg: 'Отправлено'});
+})
 
 
 router.post('/:option/email/verify', authMidelwares, async (req, res) => {
