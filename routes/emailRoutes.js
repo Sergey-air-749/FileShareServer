@@ -9,9 +9,9 @@ const Users = require('../moduls/Users')
 const authMidelwares = require('../midelwares/authMidelwares')
 const cron = require("node-cron");
 
+// service: 'Gmail',
 
 let transporter = nodemailer.createTransport({
-    // service: 'Gmail',
     host: 'smtp.gmail.com',
     port: 465, //587
     secure: true, //false
@@ -33,13 +33,14 @@ async function sendVerificationSingUpCode(recipientEmail, code) {
         html: `<p>Ваш код подтверждения: <b>${code}</b>. Он действует 10 минут.</p>`
     };
 
-    try {
-        await transporter.sendMail(mailOptions);
-        console.log('Код подтверждения отправлен на:', recipientEmail);
-    } catch (error) {
-        console.error('Ошибка при отправке почты:', error);
-        throw new Error('Не удалось отправить код подтверждения');
-    }
+    await transporter.sendMail(mailOptions);
+    console.log('Код подтверждения отправлен на:', recipientEmail);
+
+    // try {
+    // } catch (error) {
+    //     console.error('Ошибка при отправке почты:', error);
+    //     throw new Error('Не удалось отправить код подтверждения');
+    // }
 
     console.log('Письмо отправлено на почту: ' + recipientEmail);
     
@@ -54,13 +55,14 @@ async function sendVerificationСhangeCode(recipientEmail, code) {
         html: `<p>Ваш код подтверждения: <b>${code}</b>. Он действует 10 минут.</p>`
     };
 
-    try {
-        await transporter.sendMail(mailOptions);
-        console.log('Код подтверждения отправлен на:', recipientEmail);
-    } catch (error) {
-        console.error('Ошибка при отправке почты:', error);
-        throw new Error('Не удалось отправить код подтверждения');
-    }
+    await transporter.sendMail(mailOptions);
+    console.log('Код подтверждения отправлен на:', recipientEmail);
+
+    // try {
+    // } catch (error) {
+    //     console.error('Ошибка при отправке почты:', error);
+    //     throw new Error('Не удалось отправить код подтверждения');
+    // }
 
     console.log('Письмо отправлено на почту: ' + recipientEmail);
 }

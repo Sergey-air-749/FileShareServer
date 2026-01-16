@@ -35,9 +35,9 @@ const s3Client = new S3Client({
 
 
 
+// service: 'gmail', //Gmail
 
 let transporter = nodemailer.createTransport({
-    // service: 'gmail', //Gmail
     host: 'smtp.gmail.com',
     port: 465, //587
     secure: true, //false

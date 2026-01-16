@@ -8,9 +8,9 @@ require('dotenv').config();
 const Users = require('../moduls/Users')
 const authMidelwares = require('../midelwares/authMidelwares')
 
+// service: 'gmail', //Gmail
 
 let transporter = nodemailer.createTransport({
-    // service: 'gmail', //Gmail
     host: 'smtp.gmail.com',
     port: 465, //587
     secure: true, //false
