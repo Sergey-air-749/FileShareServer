@@ -42,7 +42,7 @@ async function sendVerificationSingUpCode(recipientEmail, code) {
     //     throw new Error('Не удалось отправить код подтверждения');
     // }
 
-    console.log('Письмо отправлено на почту: ' + recipientEmail);
+    // console.log('Письмо отправлено на почту: ' + recipientEmail);
     
 }
 
@@ -64,7 +64,7 @@ async function sendVerificationСhangeCode(recipientEmail, code) {
     //     throw new Error('Не удалось отправить код подтверждения');
     // }
 
-    console.log('Письмо отправлено на почту: ' + recipientEmail);
+    // console.log('Письмо отправлено на почту: ' + recipientEmail);
 }
 
 router.get('/email/test/:email', async (req, res) => {

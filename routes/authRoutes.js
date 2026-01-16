@@ -29,14 +29,15 @@ async function sendVerificationSingUpCode(recipientEmail, code) {
         text: `Ваш код подтверждения: ${code}. Он действует 10 минут.`,
         html: `<p>Ваш код подтверждения: <b>${code}</b>. Он действует 10 минут.</p>`
     };
-
-    try {
-        await transporter.sendMail(mailOptions);
-        console.log('Код подтверждения отправлен на:', recipientEmail);
-    } catch (error) {
-        console.error('Ошибка при отправке почты:', error);
-        throw new Error('Не удалось отправить код подтверждения');
-    }
+    
+    await transporter.sendMail(mailOptions);
+    console.log('Код подтверждения отправлен на:', recipientEmail);
+    
+    // try {
+    // } catch (error) {
+    //     console.error('Ошибка при отправке почты:', error);
+    //     throw new Error('Не удалось отправить код подтверждения');
+    // }
 }
 
 
