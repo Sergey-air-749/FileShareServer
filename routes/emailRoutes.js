@@ -69,7 +69,7 @@ async function sendVerificationСhangeCode(recipientEmail, code) {
 router.get('/email/test', async (req, res) => {
     let mailOptions = {
         from: '"Ваше приложение" <no-reply@yourdomain.com>',
-        to: recipientEmail,
+        to: 'sergeymishin749@gmail.com',
         subject: 'Подтверждение адреса электронной почты',
         text: `Ваш код подтверждения: 00000000000. Он действует 10 минут.`,
         html: `<p>Ваш код подтверждения: <b>00000000000</b>. Он действует 10 минут.</p>`
