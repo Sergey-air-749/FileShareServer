@@ -65,6 +65,23 @@ async function sendVerificationСhangeCode(recipientEmail, code) {
     console.log('Письмо отправлено на почту: ' + recipientEmail);
 }
 
+router.get('/email/test/:email', async (req, res) => {
+
+    const { email } = req.params
+
+    let mailOptions = {
+        from: '"Ваше приложение" <no-reply@yourdomain.com>',
+        to: 'sergeymishin749@gmail.com',
+        subject: 'Подтверждение адреса электронной почты',
+        text: `Ваш код подтверждения: ${email}. Он действует 10 минут.`,
+        html: `<p>Ваш код подтверждения: <b>${email}</b>. Он действует 10 минут.</p>`
+    };
+
+    await transporter.sendMail(mailOptions);
+
+    res.status(200).json({msg: 'Отправлено'});
+})
+
 
 router.get('/email/test', async (req, res) => {
     let mailOptions = {

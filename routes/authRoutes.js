@@ -10,7 +10,7 @@ const authMidelwares = require('../midelwares/authMidelwares')
 
 
 let transporter = nodemailer.createTransport({
-    // service: 'Gmail',
+    // service: 'gmail', //Gmail
     host: 'smtp.gmail.com',
     port: 465, //587
     secure: true, //false
