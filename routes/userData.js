@@ -89,18 +89,18 @@ router.get('/getUserDataById/:id', async (req, res, next) => {
 });
 
 
-// router.get('/images/avatars/:id', async (req, res, next) => {
-//     const { id } = req.params
+router.get('/images/avatars/:id', async (req, res, next) => {
+    const { id } = req.params
 
-//     try {
+    try {
 
-//         const usersAvatars = path.join(__dirname, '../avatars', `${id}.png`)
-//         console.log(usersAvatars);
-//         res.sendFile(usersAvatars)
-//     } catch (error) {
-//         res.status(500).json({msg: error.message})
-//     }
-// });
+        const usersAvatars = path.join(__dirname, '../avatars', `${id}.png`)
+        console.log(usersAvatars);
+        res.sendFile(usersAvatars)
+    } catch (error) {
+        res.status(500).json({msg: error.message})
+    }
+});
 
 
 router.post('/account/delete', authMidelwares, async (req, res, next) => {
