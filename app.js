@@ -65,9 +65,11 @@ app.use(express.urlencoded({ limit: '1000mb', extended: true }));
 
 app.use('/api', emailRoutes, changeUserData, filesRoutes, userData, userFileStory, authRoutes)
 
+// mongoose.set('bufferCommands', false);
 
-
-mongoose.connect(process.env.MONGO_URI)
+mongoose.connect(process.env.MONGO_URI, {
+      bufferCommands: false,
+    })
     .then(() => {
         console.log('mongoose connect successes')
     })
