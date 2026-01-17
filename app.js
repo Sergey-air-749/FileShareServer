@@ -2,12 +2,13 @@ const express = require('express')
 const mongoose = require('mongoose')  
 const users = require('./moduls/Users');
 const cors = require('cors')
-import { connectDB } from '@/lib/mongoose';
 
 const app = express()
 require('dotenv').config();
 const { createServer } = require('http');
 const { Server } = require('socket.io');
+
+const { connectDB } = require('./lib/mongodb')
 
 const os = require('os');
 
