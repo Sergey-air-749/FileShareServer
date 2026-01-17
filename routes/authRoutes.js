@@ -81,8 +81,8 @@ router.post('/signup', async (req, res) => {
                     password: hashed,
                     shareId: shareId,
                     avatar: { 
-                        '400': "/api/images/avatars/default", 
-                        '1000': "/api/images/avatars/default" 
+                        '400': "https://sergay-air-bucket-one.s3.eu-north-1.amazonaws.com/avatars/default.png", 
+                        '1000': "https://sergay-air-bucket-one.s3.eu-north-1.amazonaws.com/avatars/default.png" 
                     },
                     isVerified: false,
                     verificationCode: code,
