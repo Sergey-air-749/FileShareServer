@@ -9,7 +9,7 @@ const router = express.Router()
 require('dotenv').config();
 const path = require('path');
 
-const { connectDB } = require('./lib/mongodb')
+const { connectDB } = require('../lib/mongodb')
 
 const Users = require('../moduls/Users')
 

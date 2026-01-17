@@ -9,7 +9,7 @@ const Users = require('../moduls/Users')
 const authMidelwares = require('../midelwares/authMidelwares')
 const cron = require("node-cron");
 
-const { connectDB } = require('./lib/mongodb')
+const { connectDB } = require('../lib/mongodb')
 
 // service: 'Gmail',
 

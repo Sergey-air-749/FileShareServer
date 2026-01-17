@@ -19,7 +19,7 @@ const authMidelwares = require('../midelwares/authMidelwares')
 const multer = require('multer');
 const cron = require("node-cron");
 
-const { connectDB } = require('./lib/mongodb')
+const { connectDB } = require('../lib/mongodb')
 
 
 const s3Client = new S3Client({
