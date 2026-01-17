@@ -2,6 +2,7 @@ const express = require('express')
 const mongoose = require('mongoose')  
 const users = require('./moduls/Users');
 const cors = require('cors')
+import { connectDB } from '@/lib/mongoose';
 
 const app = express()
 require('dotenv').config();
@@ -37,6 +38,7 @@ io.on('connection', async (socket) => {
 
     socket.on('pingfilesShareId', async (shareId) => {
         socket.join(shareId);
+        await connectDB();
 
         const user = await users.findOne({shareId: shareId}) 
         const files = user.filse
@@ -45,6 +47,7 @@ io.on('connection', async (socket) => {
     });
 
     socket.on('pingfilesUserName', async (username) => {
+        await connectDB();
         const user = await users.findOne({username: username}) 
 
         socket.join(user.shareId);
@@ -67,7 +70,7 @@ app.use('/api', emailRoutes, changeUserData, filesRoutes, userData, userFileStor
 
 // mongoose.set('bufferCommands', false);
 
-await mongoose.connect(process.env.MONGO_URI, {
+mongoose.connect(process.env.MONGO_URI, {
       bufferCommands: false,
     })
     .then(() => {

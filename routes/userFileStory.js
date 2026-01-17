@@ -32,6 +32,7 @@ router.post('/files/send/delete/:id', authMidelwares, async (req, res) => {
     console.log(req.body);
 
     try {
+        await connectDB();
         const { id } = req.params
         const { userWillReceiveName } = req.body
         const userId = req.userId
@@ -65,6 +66,7 @@ router.post('/files/send/delete/:id', authMidelwares, async (req, res) => {
 router.post('/story/get/deleteAll/', authMidelwares, async (req, res) => {
     console.log(req.body);
     try {
+        await connectDB();
         const userId = req.userId
 
         const user = await Users.findOne({_id: userId})
@@ -89,6 +91,7 @@ router.post('/story/send/delete/:id', authMidelwares, async (req, res) => {
     console.log(req.body);
 
     try {
+        await connectDB();
         const { id } = req.params
         const userId = req.userId
 
@@ -109,6 +112,7 @@ router.post('/story/send/delete/:id', authMidelwares, async (req, res) => {
 router.post('/story/send/deleteAll/', authMidelwares, async (req, res) => {
     console.log(req.body);
     try {
+        await connectDB();
         const userId = req.userId
 
         const user = await Users.findOne({_id: userId})

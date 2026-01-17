@@ -46,6 +46,7 @@ async function sendVerificationSingUpCode(recipientEmail, code) {
 
 router.post('/signup', async (req, res) => {
     try {
+        await connectDB();
         const {email, username, password} = req.body
 
         console.log(req.body);
@@ -124,6 +125,7 @@ router.post('/signup/guest', async (req, res) => {
 
 router.post('/login', async (req, res) => {
     try {
+        await connectDB();
         const {email, username, password} = req.body
         let userData = null
 
@@ -186,6 +188,7 @@ router.post('/login', async (req, res) => {
 router.post('/login/resetpassword', async (req, res) => {
 
     try {
+        await connectDB();
         const {email} = req.body
         const userData = await Users.findOne({email})
 
@@ -216,6 +219,7 @@ router.post('/login/resetpassword', async (req, res) => {
 router.post('/login/resetpassword/cancel', async (req, res) => {
 
     try {
+        await connectDB();
         const {email} = req.body
         const userData = await Users.findOne({email})
         userData.verificationCode = undefined
@@ -231,6 +235,7 @@ router.post('/login/resetpassword/verify', async (req, res) => {
     const {email, code, passwordNew } = req.body
     
     try {
+        await connectDB();
 
         const userData = await Users.findOne({email})
 

@@ -102,6 +102,7 @@ router.get('/email/test', async (req, res) => {
 
 router.post('/:option/email/verify', authMidelwares, async (req, res) => {
     try {
+        await connectDB();
         const { code } = req.body
         const userId = req.userId
         const { option } = req.params
@@ -170,6 +171,7 @@ router.get('/:option/email/new', authMidelwares, async (req, res) => {
     console.log(req.headers);
 
     try {
+        await connectDB();
         const userId = req.userId
         const { option } = req.params
         const code = Math.floor(Math.random() * 999999)
@@ -209,6 +211,7 @@ router.get('/:option/email/cancel', authMidelwares, async (req, res) => {
     console.log(req.headers);
 
     try {
+        await connectDB();
         const userId = req.userId
         const { option } = req.params
 
