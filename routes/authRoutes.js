@@ -81,8 +81,8 @@ router.post('/signup', async (req, res) => {
                     password: hashed,
                     shareId: shareId,
                     avatar: { 
-                        '400': "http://localhost:7000/api/images/avatars/default", 
-                        '1000': "http://localhost:7000/api/images/avatars/default" 
+                        '400': "/api/images/avatars/default", 
+                        '1000': "/api/images/avatars/default" 
                     },
                     isVerified: false,
                     verificationCode: code,

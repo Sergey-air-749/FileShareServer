@@ -83,8 +83,8 @@ router.post('/change/avatar/default', authMidelwares, async (req, res) => {
         console.log(user);
 
         user.avatar = { 
-            '400': "http://localhost:7000/api/images/avatars/default",
-            '1000': "http://localhost:7000/api/images/avatars/default" 
+            '400': "/api/images/avatars/default",
+            '1000': "/api/images/avatars/default" 
         }
         await user.save()
 

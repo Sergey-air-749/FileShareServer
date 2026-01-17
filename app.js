@@ -19,6 +19,45 @@ const filesRoutes = require('./routes/filesRoutesV2.0')
 const userData = require('./routes/userData')
 const userFileStory = require('./routes/userFileStory');
 
+
+
+
+
+
+// Важно!
+
+// Почта работает и всё остальное API на хостиге "vercel" благодаря connectDB()
+// В итоге нет ошибок по типу:
+
+// {"msg":"No recipients defined"}
+
+// sendVerificationSingUpCode(user.email, code) -> await sendVerificationSingUpCode(user.email, code)
+
+// Но возникает другая ошибка
+
+// Operation users.findOne() buffering timed out after 10000ms
+
+// Которая решается через connectDB()
+
+// Это решение работает таким образом что перед тем как обратится к базе данных он сначала подключается к неё заранее
+
+
+
+
+
+// По мелочи
+
+// WebSocet, API Файлов работает на другом хостиге "Render"
+
+
+//Вроде как всё работает (но я не уверен на сколько стабильно)
+
+
+
+
+
+
+
 const server = createServer(app);
 const io = new Server(server, {
     connectionStateRecovery: {},
