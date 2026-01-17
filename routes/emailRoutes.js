@@ -187,11 +187,11 @@ router.get('/:option/email/new', authMidelwares, async (req, res) => {
 
         if (option == 'change') {
 
-            sendVerificationСhangeCode(user.emailNew, code)
+            await sendVerificationСhangeCode(user.emailNew, code)
 
         } else if (option == 'signup') {
 
-            sendVerificationSingUpCode(user.email, code)
+            await sendVerificationSingUpCode(user.email, code)
 
         } else {
             res.status(400).json({msg:'Ошибка при отправке, повторите попытку'});

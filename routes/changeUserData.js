@@ -220,7 +220,7 @@ router.put('/change/email', authMidelwares, async (req, res) => {
             user.emailNew = emailNew
             await user.save()
 
-            sendVerificationСhangeCode(user.emailNew, code)
+            await sendVerificationСhangeCode(user.emailNew, code)
 
             res.status(200).json({msg:'Код отправлен'});   
         } else {

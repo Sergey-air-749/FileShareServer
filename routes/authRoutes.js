@@ -89,7 +89,7 @@ router.post('/signup', async (req, res) => {
             await newUser.save()
             console.log(newUser);
 
-            sendVerificationSingUpCode(email, code)
+            await sendVerificationSingUpCode(email, code)
             
             const token = jwt.sign({id: newUser._id}, process.env.JWT_SECRET_KEY, {expiresIn: "24h"})
             res.status(200).json({token: token})
@@ -166,7 +166,7 @@ router.post('/login', async (req, res) => {
                 userData.verificationCode = code,
                 userData.codeExpires = expirationTime,
 
-                sendVerificationSingUpCode(userData.email, code)
+                await sendVerificationSingUpCode(userData.email, code)
 
                 await userData.save()
 
@@ -200,7 +200,7 @@ router.post('/login/resetpassword', async (req, res) => {
             userData.verificationCode = code,
             userData.codeExpires = expirationTime,
 
-            sendVerificationSingUpCode(email, code)
+            await sendVerificationSingUpCode(email, code)
 
             await userData.save()
 
