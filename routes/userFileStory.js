@@ -5,7 +5,7 @@ require('dotenv').config();
 const Users = require('../moduls/Users')
 const authMidelwares = require('../midelwares/authMidelwares')
 
-const { connectDB } = require('../lib/mongodb')
+const connectDB = require('../lib/mongodb')
 
 
 router.post('/story/get/delete/:id', authMidelwares, async (req, res) => {

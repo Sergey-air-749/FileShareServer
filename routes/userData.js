@@ -20,7 +20,7 @@ const s3Client = new S3Client({
     }
 })
 
-const { connectDB } = require('../lib/mongodb')
+const connectDB = require('../lib/mongodb')
 
 
 router.get('/getUserData', authMidelwares, async (req, res, next) => {

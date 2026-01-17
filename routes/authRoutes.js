@@ -8,7 +8,7 @@ require('dotenv').config();
 const Users = require('../moduls/Users')
 const authMidelwares = require('../midelwares/authMidelwares')
 
-const { connectDB } = require('../lib/mongodb')
+const connectDB = require('../lib/mongodb')
 
 // service: 'gmail', //Gmail
 
