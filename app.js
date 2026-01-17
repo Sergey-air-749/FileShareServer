@@ -8,6 +8,8 @@ require('dotenv').config();
 const { createServer } = require('http');
 const { Server } = require('socket.io');
 
+const connectDB = require('./lib/mongodb')
+
 const os = require('os');
 
 const emailRoutes = require('./routes/emailRoutes')
