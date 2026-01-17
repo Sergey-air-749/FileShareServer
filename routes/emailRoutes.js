@@ -250,6 +250,8 @@ router.get('/:option/email/cancel', authMidelwares, async (req, res) => {
 cron.schedule("0 0 * * * *", async () => {
     try {
 
+        await connectDB()
+
         const users = await Users.find()
         
         for (const user of users) {
@@ -277,6 +279,8 @@ cron.schedule("0 0 * * * *", async () => {
 
 async function init() {
     try {
+
+        await connectDB()
 
         const users = await Users.find()
         

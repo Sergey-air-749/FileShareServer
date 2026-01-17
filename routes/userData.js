@@ -249,6 +249,7 @@ router.post('/account/recovering', async (req, res, next) => {
 
 cron.schedule("0 */5 * * * *", async () => {
     try {
+        await connectDB()
         const users = await Users.find()
 
         users.forEach(async (user, index) => {
@@ -273,8 +274,9 @@ cron.schedule("0 */5 * * * *", async () => {
     }
 });
 
-cron.schedule("0 */1 * * * *", async () => {
+cron.schedule("0 */10 * * * *", async () => {
     try {
+        await connectDB()
         const users = await Users.find()
 
         users.forEach(async (user, index) => {
