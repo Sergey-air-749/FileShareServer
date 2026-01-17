@@ -57,14 +57,14 @@ async function sendVerificationСhangeCode(recipientEmail, code) {
         html: `<p>Ваш код подтверждения: <b>${code}</b>. Он действует 10 минут.</p>`
     };
 
-    await transporter.sendMail(mailOptions);
-    console.log('Код подтверждения отправлен на:', recipientEmail);
-
-    // try {
-    // } catch (error) {
-    //     console.error('Ошибка при отправке почты:', error);
-    //     throw new Error('Не удалось отправить код подтверждения');
-    // }
+    
+    try {
+        await transporter.sendMail(mailOptions);
+        console.log('Код подтверждения отправлен на:', recipientEmail);
+    } catch (error) {
+        console.error('Ошибка при отправке почты:', error);
+        throw new Error('Не удалось отправить код подтверждения');
+    }
 }
 
 
@@ -220,7 +220,7 @@ router.put('/change/email', authMidelwares, async (req, res) => {
             user.emailNew = emailNew
             await user.save()
 
-            await sendVerificationСhangeCode(user.emailNew, code)
+            sendVerificationСhangeCode(user.emailNew, code)
 
             res.status(200).json({msg:'Код отправлен'});   
         } else {

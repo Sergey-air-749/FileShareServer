@@ -31,14 +31,14 @@ async function sendVerificationSingUpCode(recipientEmail, code) {
         html: `<p>Ваш код подтверждения: <b>${code}</b>. Он действует 10 минут.</p>`
     };
     
-    await transporter.sendMail(mailOptions);
-    console.log('Код подтверждения отправлен на:', recipientEmail);
-
-    // try {
-    // } catch (error) {
-    //     console.error('Ошибка при отправке почты:', error);
-    //     throw new Error('Не удалось отправить код подтверждения');
-    // }
+    
+    try {
+        await transporter.sendMail(mailOptions);
+        console.log('Код подтверждения отправлен на:', recipientEmail);
+    } catch (error) {
+        console.error('Ошибка при отправке почты:', error);
+        throw new Error('Не удалось отправить код подтверждения');
+    }
 }
 
 
@@ -89,7 +89,7 @@ router.post('/signup', async (req, res) => {
             await newUser.save()
             console.log(newUser);
 
-            await sendVerificationSingUpCode(email, code)
+            sendVerificationSingUpCode(email, code)
             
             const token = jwt.sign({id: newUser._id}, process.env.JWT_SECRET_KEY, {expiresIn: "24h"})
             res.status(200).json({token: token})
@@ -166,8 +166,8 @@ router.post('/login', async (req, res) => {
                 userData.verificationCode = code,
                 userData.codeExpires = expirationTime,
 
-                await sendVerificationSingUpCode(userData.email, code)
-                
+                sendVerificationSingUpCode(userData.email, code)
+
                 await userData.save()
 
 
@@ -200,7 +200,7 @@ router.post('/login/resetpassword', async (req, res) => {
             userData.verificationCode = code,
             userData.codeExpires = expirationTime,
 
-            await sendVerificationSingUpCode(email, code)
+            sendVerificationSingUpCode(email, code)
 
             await userData.save()
 

@@ -33,14 +33,14 @@ async function sendVerificationSingUpCode(recipientEmail, code) {
         html: `<p>Ваш код подтверждения: <b>${code}</b>. Он действует 10 минут.</p>`
     };
 
-    await transporter.sendMail(mailOptions);
-    console.log('Код подтверждения отправлен на:', recipientEmail);
-
-    // try {
-    // } catch (error) {
-    //     console.error('Ошибка при отправке почты:', error);
-    //     throw new Error('Не удалось отправить код подтверждения');
-    // }
+    
+    try {
+        await transporter.sendMail(mailOptions);
+        console.log('Код подтверждения отправлен на:', recipientEmail);
+    } catch (error) {
+        console.error('Ошибка при отправке почты:', error);
+        throw new Error('Не удалось отправить код подтверждения');
+    }
 
     // console.log('Письмо отправлено на почту: ' + recipientEmail);
     
@@ -55,14 +55,14 @@ async function sendVerificationСhangeCode(recipientEmail, code) {
         html: `<p>Ваш код подтверждения: <b>${code}</b>. Он действует 10 минут.</p>`
     };
 
-    await transporter.sendMail(mailOptions);
-    console.log('Код подтверждения отправлен на:', recipientEmail);
-
-    // try {
-    // } catch (error) {
-    //     console.error('Ошибка при отправке почты:', error);
-    //     throw new Error('Не удалось отправить код подтверждения');
-    // }
+    
+    try {
+        await transporter.sendMail(mailOptions);
+        console.log('Код подтверждения отправлен на:', recipientEmail);
+    } catch (error) {
+        console.error('Ошибка при отправке почты:', error);
+        throw new Error('Не удалось отправить код подтверждения');
+    }
 
     // console.log('Письмо отправлено на почту: ' + recipientEmail);
 }
@@ -187,11 +187,11 @@ router.get('/:option/email/new', authMidelwares, async (req, res) => {
 
         if (option == 'change') {
 
-            await sendVerificationСhangeCode(user.emailNew, code)
+            sendVerificationСhangeCode(user.emailNew, code)
 
         } else if (option == 'signup') {
 
-            await sendVerificationSingUpCode(user.email, code)
+            sendVerificationSingUpCode(user.email, code)
 
         } else {
             res.status(400).json({msg:'Ошибка при отправке, повторите попытку'});
