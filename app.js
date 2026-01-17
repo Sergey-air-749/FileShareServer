@@ -67,7 +67,7 @@ app.use('/api', emailRoutes, changeUserData, filesRoutes, userData, userFileStor
 
 // mongoose.set('bufferCommands', false);
 
-mongoose.connect(process.env.MONGO_URI, {
+await mongoose.connect(process.env.MONGO_URI, {
       bufferCommands: false,
     })
     .then(() => {
