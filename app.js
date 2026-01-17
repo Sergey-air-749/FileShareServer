@@ -8,8 +8,6 @@ require('dotenv').config();
 const { createServer } = require('http');
 const { Server } = require('socket.io');
 
-const { connectDB } = require('./lib/mongodb')
-
 const os = require('os');
 
 const emailRoutes = require('./routes/emailRoutes')
@@ -29,9 +27,11 @@ const userFileStory = require('./routes/userFileStory');
 // Почта работает и всё остальное API на хостиге "vercel" благодаря connectDB()
 // В итоге нет ошибок по типу:
 
+
 // {"msg":"No recipients defined"}
 
 // sendVerificationSingUpCode(user.email, code) -> await sendVerificationSingUpCode(user.email, code)
+
 
 // Но возникает другая ошибка
 
@@ -42,6 +42,13 @@ const userFileStory = require('./routes/userFileStory');
 // Это решение работает таким образом что перед тем как обратится к базе данных он сначала подключается к неё заранее
 
 
+// Could not connect to any servers in your MongoDB Atlas cluster. One common reason is that you're trying to access the database from an IP that isn't whitelisted. Make sure your current IP address is on your Atlas cluster's IP whitelist:
+
+// После предидущего решения возникла эта ошибка надо просто указать в MongoDB IP Хостенга 
+
+// Узнать IP можно с помощю "console.log(os.networkInterfaces());" 
+
+// нужно перейти в MongoDB Atlas -> Database & Network Access -> IP Access List и указать там IP хостенга
 
 
 
@@ -51,6 +58,7 @@ const userFileStory = require('./routes/userFileStory');
 
 
 //Вроде как всё работает (но я не уверен на сколько стабильно)
+
 
 
 
