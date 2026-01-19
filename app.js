@@ -63,9 +63,6 @@ const userFileStory = require('./routes/userFileStory');
 
 
 
-connectDB()
-
-
 const server = createServer(app);
 const io = new Server(server, {
     connectionStateRecovery: {},
@@ -119,21 +116,23 @@ app.use('/api', emailRoutes, changeUserData, filesRoutes, userData, userFileStor
 
 // mongoose.set('bufferCommands', false);
 
-mongoose.connect(process.env.MONGO_URI, {
-      bufferCommands: false,
-    })
-    .then(() => {
-        console.log('mongoose connect successes')
-    })
-    .catch ((err) => {
-        console.log(err)
-    })
+// mongoose.connect(process.env.MONGO_URI, {
+//       bufferCommands: false,
+//     })
+//     .then(() => {
+//         console.log('mongoose connect successes')
+//     })
+//     .catch ((err) => {
+//         console.log(err)
+//     })
 
 
 
 server.listen(process.env.PORT_API, () => {
     console.log("API and Soket IO http://localhost:" + process.env.PORT_API);
 });
+
+
 
 
 // server.listen(process.env.PORT_API, () => {
