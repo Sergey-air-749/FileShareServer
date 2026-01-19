@@ -27,7 +27,7 @@ router.get('/getUserData', authMidelwares, async (req, res, next) => {
     const userId = req.userId
 
     try {
-        await connectDB();
+         
 
         const user = await Users.findOne({_id: userId})
 
@@ -50,7 +50,7 @@ router.get('/getUserDataById/:id', async (req, res, next) => {
     const { id } = req.params
 
     try {
-        await connectDB();
+         
 
         const user = await Users.findOne({shareId: id})
         console.log(user);
@@ -108,7 +108,7 @@ router.post('/account/delete', authMidelwares, async (req, res, next) => {
     const { password } = req.body
 
     try {
-        await connectDB();
+         
         const user = await Users.findOne({_id: userId})
         const sessionRandomId = Math.floor(Math.random() * 99999999)
 
@@ -144,7 +144,7 @@ router.get('/get/session', authMidelwares, async (req, res, next) => {
     const userId = req.userId
 
     try {
-        await connectDB();
+         
         const user = await Users.findOne({_id: userId})
         const session = user.session
         console.log(session);
@@ -167,7 +167,7 @@ router.delete('/account/delete', authMidelwares, async (req, res, next) => {
     const userId = req.userId
 
     try {
-        await connectDB();
+         
         const user = await Users.findOne({_id: userId})
         
         if (user != null) {
@@ -199,7 +199,7 @@ router.post('/account/recovering', async (req, res, next) => {
     let userData = null
 
     try {
-        await connectDB();
+         
 
         if (email == '') {
             userData = await Users.findOne({username})

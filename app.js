@@ -63,9 +63,7 @@ const userFileStory = require('./routes/userFileStory');
 
 
 
-
-
-
+await connectDB()
 
 
 const server = createServer(app);
@@ -88,7 +86,7 @@ io.on('connection', async (socket) => {
 
     socket.on('pingfilesShareId', async (shareId) => {
         socket.join(shareId);
-        await connectDB();
+         
 
         const user = await users.findOne({shareId: shareId}) 
         const files = user.filse
@@ -97,7 +95,7 @@ io.on('connection', async (socket) => {
     });
 
     socket.on('pingfilesUserName', async (username) => {
-        await connectDB();
+         
         const user = await users.findOne({username: username}) 
 
         socket.join(user.shareId);
@@ -109,6 +107,7 @@ io.on('connection', async (socket) => {
 
 });
 
+await connectDB()
 
 app.use(cors())
 

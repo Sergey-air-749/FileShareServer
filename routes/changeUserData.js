@@ -72,7 +72,7 @@ async function sendVerificationСhangeCode(recipientEmail, code) {
 
 router.post('/change/avatar/default', authMidelwares, async (req, res) => {
     try {
-        await connectDB();
+         
         const userId = req.userId
 
         const pathOpen = path.join(__dirname, '../avatars/', userId + '.png')
@@ -126,7 +126,7 @@ const uploadAvatar = multer({
 router.post('/change/avatar', uploadAvatar.single('avatar'), authMidelwares, async (req, res) => {
     try {
 
-        await connectDB();
+         
         
         const userId = req.userId
         req.file.originalname = userId + '.png'
@@ -208,7 +208,7 @@ router.put('/change/email', authMidelwares, async (req, res) => {
     console.log(req.headers);
 
     try {
-        await connectDB();
+         
         const userId = req.userId
         const code = Math.floor(Math.random() * 999999)
         const { emailNew } = req.body
@@ -248,7 +248,7 @@ router.put('/change/username', authMidelwares, async (req, res) => {
     console.log(req.body);
     console.log(req.headers);
     try {
-        await connectDB();
+         
         const userId = req.userId
         const { usernameNew } = req.body
 
@@ -274,7 +274,7 @@ router.put('/change/password', authMidelwares, async (req, res) => {
     console.log(req.body);
     console.log(req.headers);
     try {
-        await connectDB();
+         
         const userId = req.userId
         const { passwordOld, passwordNew, passwordRepeatNew } = req.body
 

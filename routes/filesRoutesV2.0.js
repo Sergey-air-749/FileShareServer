@@ -75,7 +75,7 @@ const uploadS3 = multer({
 
 router.post('/fileLoadNew/:id/', uploadS3.array('files'), authMidelwares, async (req, res) => {
     try {
-        await connectDB();
+         
 
         const userId = req.userId
     
@@ -146,7 +146,7 @@ router.post('/textLoad/:id', authMidelwares, async (req, res) => {
     console.log(req.body);
 
     try {
-        await connectDB();
+         
         const { id } = req.params
         const { sentToUserId, textValue, data, device, username } = req.body
         const userId = req.userId
@@ -197,7 +197,7 @@ router.post('/textLoad/:id', authMidelwares, async (req, res) => {
 
 router.get('/getDownloadNew/:option/:shareId/:fileId', async (req, res) => {
     try {
-        await connectDB();
+         
         console.log(req.params);
         
         const { shareId, fileId, option } = req.params
@@ -323,7 +323,7 @@ router.get('/getDownloadNew/:option/:shareId/:fileId', async (req, res) => {
 
 router.post('/files/cancel/:shareId',authMidelwares, async (req, res) => {
     try {
-        await connectDB();
+         
         const { shareId } = req.params
         const userId = req.userId
 
@@ -378,7 +378,7 @@ router.post('/files/cancel/:shareId',authMidelwares, async (req, res) => {
 
 router.post('/files/cancel/:shareId/:id', authMidelwares, async (req, res) => {
     try {
-        await connectDB();
+         
 
         const { shareId, id } = req.params
         console.log(req.params)
@@ -438,7 +438,7 @@ router.post('/files/cancel/:shareId/:id', authMidelwares, async (req, res) => {
 
 cron.schedule("0 0 * * * *", async () => {
     try {
-        await connectDB();
+         
         const users = await Users.find()
 
         for (const user of users) {
