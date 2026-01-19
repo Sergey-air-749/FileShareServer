@@ -107,7 +107,7 @@ io.on('connection', async (socket) => {
 
 });
 
-await connectDB()
+connectDB()
 
 app.use(cors())
 
