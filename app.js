@@ -1,5 +1,4 @@
-const express = require('express')  
-const mongoose = require('mongoose')  
+const express = require('express')    
 const users = require('./moduls/Users');
 const cors = require('cors')
 
@@ -104,7 +103,12 @@ io.on('connection', async (socket) => {
 
 });
 
-connectDB()
+async function startMongoDBConnected() {
+    await connectDB()
+    console.log('MongoDB connected')
+}
+
+startMongoDBConnected()
 
 app.use(cors())
 
@@ -113,20 +117,6 @@ app.use(express.json({ limit: '1000mb' }));
 app.use(express.urlencoded({ limit: '1000mb', extended: true }));
 
 app.use('/api', emailRoutes, changeUserData, filesRoutes, userData, userFileStory, authRoutes)
-
-// mongoose.set('bufferCommands', false);
-
-// mongoose.connect(process.env.MONGO_URI, {
-//       bufferCommands: false,
-//     })
-//     .then(() => {
-//         console.log('mongoose connect successes')
-//     })
-//     .catch ((err) => {
-//         console.log(err)
-//     })
-
-
 
 server.listen(process.env.PORT_API, () => {
     console.log("API and Soket IO http://localhost:" + process.env.PORT_API);
