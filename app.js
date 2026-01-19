@@ -63,7 +63,7 @@ const userFileStory = require('./routes/userFileStory');
 
 
 
-await connectDB()
+connectDB()
 
 
 const server = createServer(app);
