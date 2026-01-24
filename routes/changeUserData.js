@@ -126,7 +126,7 @@ const uploadAvatar = multer({
 router.post('/change/avatar', uploadAvatar.single('avatar'), authMidelwares, async (req, res) => {
     try {
 
-         
+        const { v } = req.body
         
         const userId = req.userId
         req.file.originalname = userId + '.png'
@@ -175,9 +175,11 @@ router.post('/change/avatar', uploadAvatar.single('avatar'), authMidelwares, asy
         const user = await Users.findOne({_id: userId})
         console.log(user);
 
+
+
         user.avatar = { 
-            '400': "https://sergay-air-bucket-one.s3.eu-north-1.amazonaws.com/avatars/" + userId + '1000' + ".png",
-            '1000': "https://sergay-air-bucket-one.s3.eu-north-1.amazonaws.com/avatars/" + userId + '400' + ".png",
+            '400': "https://sergay-air-bucket-one.s3.eu-north-1.amazonaws.com/avatars/" + userId + '400' + ".png?v=" + v,
+            '1000': "https://sergay-air-bucket-one.s3.eu-north-1.amazonaws.com/avatars/" + userId + '1000' + ".png?v=" + v,
         }
         await user.save()
 
