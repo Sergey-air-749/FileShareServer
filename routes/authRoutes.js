@@ -227,6 +227,8 @@ router.post('/login/resetpassword/cancel', async (req, res) => {
         userData.verificationCode = undefined
         userData.codeExpires = undefined
 
+        res.status(200).json({msg: "Сброс отменён"})
+
     } catch (error) {
         res.status(500).json({msg: error.message})
     }
