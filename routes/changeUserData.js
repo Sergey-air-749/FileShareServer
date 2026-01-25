@@ -122,6 +122,78 @@ const generateFilename = (fileName) => {
 
 
 
+const seveAvatarAndSetting = async (fileBuffer, format, animated, userId) => {
+    
+    let img1000 = ''
+    let img400 = ''
+
+    if (animated == true) {
+
+        img1000 = await sharp(fileBuffer, { animated: animated })
+            .resize({
+                width: 1000,
+                height: 1000,
+                fit: sharp.fit.cover,
+                position: sharp.gravity.center
+            })
+            .gif({ dither: 0, colors: 256 })
+            .toFormat(`${format}`)
+            .toBuffer();
+            
+        img400 = await sharp(fileBuffer, { animated: animated })
+            .resize({
+                width: 400, 
+                height: 400, 
+                fit: sharp.fit.cover,
+                position: sharp.gravity.center
+            })
+            .gif({ dither: 0, colors: 256 })
+            .toFormat(`${format}`)
+            .toBuffer();
+        
+    } else {
+
+        img1000 = await sharp(fileBuffer)
+            .resize({
+                width: 1000,
+                height: 1000,
+                fit: sharp.fit.cover,
+                position: sharp.gravity.center
+            })
+            .toFormat(`${format}`)
+            .toBuffer();
+            
+        img400 = await sharp(fileBuffer)
+            .resize({
+                width: 400, 
+                height: 400, 
+                fit: sharp.fit.cover,
+                position: sharp.gravity.center
+            })
+            .gif({ dither: 0, colors: 256 })
+            .toFormat(`${format}`)
+            .toBuffer();
+        
+    }
+
+        
+    await s3Client.send(new PutObjectCommand({
+        Bucket: 'sergay-air-bucket-one',
+        Key: `avatars/${userId}1000.${format}`,
+        Body: img1000,
+        ContentType: `image/${format}`,
+    }));
+
+    await s3Client.send(new PutObjectCommand({
+        Bucket: 'sergay-air-bucket-one',
+        Key: `avatars/${userId}400.${format}`,
+        Body: img400,
+        ContentType: `image/${format}`,
+    }));
+
+}
+
+
 
 router.post('/change/avatar', uploadAvatar.single('avatar'), authMidelwares, async (req, res) => {
     try {
@@ -133,126 +205,39 @@ router.post('/change/avatar', uploadAvatar.single('avatar'), authMidelwares, asy
 
         const lastDotIndex = req.file.originalname.lastIndexOf('.');
 
+        let format = ''
+
         console.log(req.file);
 
+
         if (lastDotIndex === -1 || lastDotIndex === 0) {
-
-            req.file.originalname = userId + '.png'
-
-            const img1000 = await sharp(req.file.buffer)
-                .resize({
-                    width: 1000,
-                    height: 1000,
-                    fit: sharp.fit.cover,
-                    position: sharp.gravity.center
-                })
-                .toFormat('png')
-                .toBuffer();
-                
-            await s3Client.send(new PutObjectCommand({
-                Bucket: 'sergay-air-bucket-one',
-                Key: `avatars/${userId}1000.png`,
-                Body: img1000,
-                ContentType: "image/png",
-            }));
-
-
-
-            const img400 = await sharp(req.file.buffer)
-                .resize({
-                    width: 400, 
-                    height: 400, 
-                    fit: sharp.fit.cover,
-                    position: sharp.gravity.center
-                })
-                .toFormat('png')
-                .toBuffer();
-
-
-            await s3Client.send(new PutObjectCommand({
-                Bucket: 'sergay-air-bucket-one',
-                Key: `avatars/${userId}400.png`,
-                Body: img400,
-                ContentType: "image/png",
-            }));
-
-
-
-            const user = await Users.findOne({_id: userId})
-            console.log(user);
-
-
-
-            user.avatar = { 
-                '400': "https://sergay-air-bucket-one.s3.eu-north-1.amazonaws.com/avatars/" + userId + '400' + ".png?v=" + v,
-                '1000': "https://sergay-air-bucket-one.s3.eu-north-1.amazonaws.com/avatars/" + userId + '1000' + ".png?v=" + v,
-            }
-            await user.save()
-
-            console.log('Файл успешно удалён');
-            res.status(200).json({msg:'Новая аватарка сахранина'});
-
+            format = 'png'
+            await seveAvatarAndSetting(req.file.buffer, 'png', false, userId)
         } else {
 
             const fileExtension = req.file.originalname.substring(lastDotIndex + 1)
-
-            let format = ''
+            
+            console.log(req.file);
 
             if (fileExtension == 'gif') {
                 format = 'gif'
+                await seveAvatarAndSetting(req.file.buffer, 'gif', true, userId) 
+
+            } else if (fileExtension == 'webp') {
+                format = 'webp'
+                await seveAvatarAndSetting(req.file.buffer, 'webp', true, userId)
             } else {
                 format = 'png'
+                await seveAvatarAndSetting(req.file.buffer, 'png', false, userId)
             }
-            
-            const img1000 = await sharp(req.file.buffer, { animated: true })
-                .resize({
-                    width: 1000,
-                    height: 1000,
-                    fit: sharp.fit.cover,
-                    position: sharp.gravity.center
-                })
-                .gif({ dither: 0, colors: 256 })
-                .toFormat(`${format}`)
-                .toBuffer();
-                
-            await s3Client.send(new PutObjectCommand({
-                Bucket: 'sergay-air-bucket-one',
-                Key: `avatars/${userId}1000.${format}`,
-                Body: img1000,
-                ContentType: `image/${format}`,
-            }));
-
-
-
-            const img400 = await sharp(req.file.buffer, { animated: true })
-                .resize({
-                    width: 400, 
-                    height: 400, 
-                    fit: sharp.fit.cover,
-                    position: sharp.gravity.center
-                })
-                .gif({ dither: 0, colors: 256 })
-                .toFormat(`${format}`)
-                .toBuffer();
-
-
-            await s3Client.send(new PutObjectCommand({
-                Bucket: 'sergay-air-bucket-one',
-                Key: `avatars/${userId}400.${format}`,
-                Body: img400,
-                ContentType: `image/${format}`,
-            }));
-
-
 
             const user = await Users.findOne({_id: userId})
             console.log(user);
 
 
-
             user.avatar = { 
-                '400': "https://sergay-air-bucket-one.s3.eu-north-1.amazonaws.com/avatars/" + userId + '400' + "." + format + "?v=" + v + "&form=gif",
-                '1000': "https://sergay-air-bucket-one.s3.eu-north-1.amazonaws.com/avatars/" + userId + '1000' + "." + format + "?v=" + v + "&form=gif",
+                '400': "https://sergay-air-bucket-one.s3.eu-north-1.amazonaws.com/avatars/" + userId + '400' + "." + format + "?v=" + v,
+                '1000': "https://sergay-air-bucket-one.s3.eu-north-1.amazonaws.com/avatars/" + userId + '1000' + "." + format + "?v=" + v
             }
             await user.save()
 
@@ -260,6 +245,7 @@ router.post('/change/avatar', uploadAvatar.single('avatar'), authMidelwares, asy
             res.status(200).json({msg:'Новая аватарка сахранина'});
 
         }
+
 
         
         
