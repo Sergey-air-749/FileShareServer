@@ -41,13 +41,14 @@ const generateFilename = (fileName) => {
     const lastDotIndex = fileName.lastIndexOf('.');
 
     if (lastDotIndex === -1 || lastDotIndex === 0) {
-        return `${randomNameId}`;
+        return `${fileName + String(randomNameId)}`;
     }
 
+    const fileNameUTFNotExtension = fileName.substring(0, lastDotIndex)
     const fileExtension = fileName.substring(lastDotIndex + 1)
 
-    console.log(`${randomNameId}.${fileExtension}`);
-    return `${randomNameId}.${fileExtension}`;
+    console.log(`${fileName}${randomNameId}.${fileExtension}`);
+    return `${fileNameUTFNotExtension}${randomNameId}.${fileExtension}`;
 }
 
 
@@ -61,7 +62,13 @@ const uploadS3 = multer({
     bucket: 'sergay-air-bucket-one',
 
     key: function (req, file, cb) {
-      const fileName = generateFilename(file.originalname)
+      console.log(req);
+      const fileNameUTF = Buffer.from(file.originalname, 'latin1').toString('utf8');
+      console.log(fileNameUTF);
+
+      const fileName = generateFilename(fileNameUTF)
+      console.log(fileName);
+      
       cb(null, file.originalname = fileName);
       cb(null, file.key = 'files/' + fileName);
       console.log('key');
