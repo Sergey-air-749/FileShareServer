@@ -30,33 +30,59 @@ let transporter = nodemailer.createTransport({
 });
 
 
-async function sendVerificationSingUpCode(recipientEmail, code) {
-    let mailOptions = {
-        // from: '"Ваше приложение" <no-reply@yourdomain.com>',
-        from: '"Ваше приложение" <no-reply@yourdomain.com>',
-        to: recipientEmail,
-        subject: 'Подтверждение адреса электронной почты',
-        text: `Ваш код подтверждения: ${code}. Он действует 10 минут.`,
-        html: `<p>Ваш код подтверждения: <b>${code}</b>. Он действует 10 минут.</p>`
-    };
+// async function sendVerificationSignUpCode(recipientEmail, code) {
+//     let mailOptions = {
+//         // from: '"Ваше приложение" <no-reply@yourdomain.com>',
+//         from: '"Ваше приложение" <no-reply@yourdomain.com>',
+//         to: recipientEmail,
+//         subject: 'Подтверждение адреса электронной почты чтобы закончить регистрацию',
+//         text: `Ваш код подтверждения: ${code}. Он действует 10 минут.`,
+//         html: `<p>Ваш код подтверждения: <b>${code}</b>. Он действует 10 минут.</p>`
+//     };
     
+    
+//     try {
+//         await transporter.sendMail(mailOptions);
+//         console.log('Код подтверждения отправлен на:', recipientEmail);
+//     } catch (error) {
+//         console.error('Ошибка при отправке почты:', error);
+//         throw new Error('Не удалось отправить код подтверждения');
+//     }
+// }
+
+
+const { translationsSignUpCode } = require('./locales'); // Подключаем словарь
+
+async function sendVerificationSignUpCode(recipientEmail, code, lang = 'ru') {
+    // Выбираем язык (если пришел неизвестный, падаем на русский)
+    const translation = translationsSignUpCode[lang] || translationsSignUpCode.ru;
+    console.log('lang:', lang);
+    console.log('translation:', translation);
+    
+
+    let mailOptions = {
+        from: `"${translation.senderName}" <no-reply@yourdomain.com>`,
+        to: recipientEmail,
+        subject: translation.subject,
+        text: translation.text(code),
+        html: translation.html(code)
+    };
     
     try {
         await transporter.sendMail(mailOptions);
-        console.log('Код подтверждения отправлен на:', recipientEmail);
+        console.log(`Код подтверждения отправлен на (${lang}):`, recipientEmail);
     } catch (error) {
         console.error('Ошибка при отправке почты:', error);
-        throw new Error('Не удалось отправить код подтверждения');
+        throw new Error('failedToSendTheConfirmationCode');
     }
 }
-
 
 
 
 router.post('/signup', async (req, res) => {
     try {
 
-        const {email, username, password} = req.body
+        const {email, username, password, lang} = req.body
         
         console.log(req.body);
         
@@ -74,10 +100,10 @@ router.post('/signup', async (req, res) => {
             console.log(existingUserUsername);
 
             if (existingUserEmail != null) {
-                res.status(400).json({msg: "Пользователь с этой почтай уже существует"})
+                res.status(400).json({msg: "aUserEmailAlreadyExists"})
                 
             } else if (existingUserUsername != null) {
-                res.status(400).json({msg: `Имя пользователя ${username} уже зането`})
+                res.status(400).json({msg: "userNameIsTaken"})
                 
             } else {
                 const hashed = await bcrypt.hash(password, 10)
@@ -107,10 +133,21 @@ router.post('/signup', async (req, res) => {
                 await newUser.save()
                 console.log(newUser);
 
-                await sendVerificationSingUpCode(email, code)
+                await sendVerificationSignUpCode(email, code, lang)
                 
                 const token = jwt.sign({id: newUser._id}, process.env.JWT_SECRET_KEY, {expiresIn: "24h"})
-                res.status(200).json({token: token})
+
+                const isProduction = process.env.SECURE_COOKIE === 'production';
+
+                res.cookie('token', token, {
+                    httpOnly: true,
+                    secure: isProduction, // process.env.SECURE_COOKIE === 'production', // true только в продакшене
+                    sameSite: isProduction ? 'none' : 'lax', // Для локальной разработки на разных портах
+                    maxAge: 24 * 60 * 60 * 1000 // 24 часа в миллисекундах
+                });
+
+
+                res.status(200).json({msg: 'Пользователь успешно зарегистрирован'})
 
             }
         }
@@ -138,7 +175,25 @@ router.post('/signup/guest', async (req, res) => {
         console.log(newUser);
         
         const token = jwt.sign({id: newUser._id}, process.env.JWT_SECRET_KEY)
-        res.status(200).json({token: token})
+        console.log(token);
+
+        const isProduction = process.env.SECURE_COOKIE === 'production';
+        
+        res.cookie('token', token, {
+            secure: isProduction === 'production', // true только в продакшене
+            maxAge: 60 * 60 * 24 * 365, // 365 дней в милисикундах
+            httpOnly: true,
+            sameSite: isProduction ? 'none' : 'lax', // Для локальной разработки на разных портах
+        });
+
+        res.cookie('recoveringGuestToken', token, {
+            httpOnly: true,
+            secure: isProduction, // true только в продакшене
+            sameSite: isProduction ? 'none' : 'lax', // Для локальной разработки на разных портах
+            maxAge: 60 * 60 * 24 * 365, // 365 дней в милисикундах
+        });
+
+        res.status(200).json({ msg: 'Гостивой аккаунт зарегистрирован' })
 
     } catch (error) {
         res.status(500).json({msg: error.message})
@@ -147,7 +202,7 @@ router.post('/signup/guest', async (req, res) => {
 
 router.post('/guest/update', async (req, res) => {
     
-    const {email, username, password} = req.body
+    const {email, username, password, lang} = req.body
 
     console.log(req.body);
 
@@ -160,10 +215,10 @@ router.post('/guest/update', async (req, res) => {
     console.log(existingUserUsername);
 
     if (existingUserEmail != null) {
-        res.status(400).json({msg: "Пользователь с этой почтай уже существует"})
+        res.status(400).json({msg: "aUserEmailAlreadyExists"})
         
     } else if (existingUserUsername != null) {
-        res.status(400).json({msg: `Имя пользователя ${username} уже зането`})
+        res.status(400).json({msg: 'userNameIsTaken'})
         
     } else {
     
@@ -179,7 +234,7 @@ router.post('/guest/update', async (req, res) => {
         // если этот пользователь не являентся гостям то ему зарегистрируют новый аккаунт
 
         if (getGuestUser.isGuest != true) {
-            res.status(400).json({msg: 'Пользователь не является гостям'})
+            res.status(400).json({msg: 'userIsNotAGuest'})
         } else {
 
             const hashed = await bcrypt.hash(password, 10)
@@ -208,9 +263,9 @@ router.post('/guest/update', async (req, res) => {
             getGuestUser.isGuest = undefined;
             await getGuestUser.save();
 
-            await sendVerificationSingUpCode(email, code)
+            await sendVerificationSignUpCode(email, code, lang)
 
-            res.status(200).json({})
+            res.status(200).json({msg: 'Данные пользователя обновлены'})
         }
     }
 
@@ -220,8 +275,11 @@ router.post('/guest/update', async (req, res) => {
 router.post('/login', async (req, res) => {
     try {
          
-        const {email, username, password} = req.body
+        const {email, username, password, lang} = req.body
         let userData = null
+
+        console.log(req.body);
+        
 
         if (email == '') {
             userData = await Users.findOne({username: username})
@@ -231,14 +289,14 @@ router.post('/login', async (req, res) => {
 
         if (!userData) {
             if (email == '') {
-                res.status(400).json({msg: "Неверное имя пользователя"})
+                res.status(400).json({msg: "invalidUserName"})
             } else if (username == '') {
-                res.status(400).json({msg: "Неверная Почта"})       
+                res.status(400).json({msg: "invalidUserEmail"})       
             }
         } else {
             if (userData.isDelete == true) {
                 
-                res.status(400).json({msg: "Аккаунта с такими данными не существует"})
+                res.status(400).json({msg: "accountDetailsNotExist"})
 
             } else if (userData.isVerified != false) {
 
@@ -246,13 +304,27 @@ router.post('/login', async (req, res) => {
                 console.log(passwordValed);
 
                 if (passwordValed != false) {
+
                     const token = jwt.sign({id: userData._id}, process.env.JWT_SECRET_KEY, {expiresIn: "24h"})
-                    res.status(200).json({token: token})
+
+                    const isProduction = process.env.SECURE_COOKIE === 'production';
+
+                    console.log(process.env.SECURE_COOKIE === 'production');
+                    
+                    res.cookie('token', token, {
+                        httpOnly: true,
+                        secure: isProduction, // process.env.SECURE_COOKIE === 'production', // true только в продакшене
+                        sameSite: isProduction ? 'none' : 'lax', // Для локальной разработки на разных портах
+                        maxAge: 24 * 60 * 60 * 1000 // 24 часа в миллисекундах
+                    });
+
+                    res.status(200).json({ msg: 'Вход выполнен' })
+                    // res.status(200).json({token: token})
                 } else {
-                    res.status(400).json({msg: "Не верный пароль"})
+                    res.status(400).json({msg: "incorrectPassword"})
                 }
                 
-            } else {
+            } else if (userData.isVerified == false) {
 
                 const code = Math.floor(Math.random() * 999999)
 
@@ -262,13 +334,24 @@ router.post('/login', async (req, res) => {
                 userData.verificationCode = code,
                 userData.codeExpires = expirationTime,
 
-                await sendVerificationSingUpCode(userData.email, code)
+                await sendVerificationSignUpCode(userData.email, code, lang)
 
                 await userData.save()
 
 
                 const token = jwt.sign({id: userData._id}, process.env.JWT_SECRET_KEY, {expiresIn: "24h"})
-                res.status(400).json({msg: "Почта не верифицирована", token: token})
+
+                const isProduction = process.env.SECURE_COOKIE === 'production';
+
+                res.cookie('token', token, {
+                    httpOnly: true,
+                    secure: isProduction, // process.env.SECURE_COOKIE === 'production', // true только в продакшене
+                    sameSite: isProduction ? 'none' : 'lax', // Для локальной разработки на разных портах
+                    maxAge: 24 * 60 * 60 * 1000 // 24 часа в миллисекундах
+                });
+
+
+                res.status(400).json({msg: "emailNotVerified"})
             }
 
         }
@@ -279,15 +362,15 @@ router.post('/login', async (req, res) => {
 })
 
 
-router.post('/login/resetpassword', async (req, res) => {
+router.post('/login/resetpassword/new', async (req, res) => {
 
     try {
          
-        const {email} = req.body
+        const {email, lang} = req.body
         const userData = await Users.findOne({email})
 
         if (!userData) {
-            res.status(400).json({msg: "Аккаунта с этой почтой не существует"})
+            res.status(400).json({msg: "accountEmailAddressNotExist"})
         } else {
             const code = Math.floor(Math.random() * 999999)
 
@@ -297,7 +380,7 @@ router.post('/login/resetpassword', async (req, res) => {
             userData.verificationCode = code,
             userData.codeExpires = expirationTime,
 
-            await sendVerificationSingUpCode(email, code)
+            await sendVerificationSignUpCode(email, code, lang)
 
             await userData.save()
 
@@ -329,21 +412,23 @@ router.post('/login/resetpassword/cancel', async (req, res) => {
 router.post('/login/resetpassword/verify', async (req, res) => {
 
     const {email, code, passwordNew } = req.body
+
+    console.log(req.body);
+    
     
     try {
          
-
-        const userData = await Users.findOne({email})
+        const userData = await Users.findOne({email: email})
 
         if (!userData) {
-            res.status(400).json({msg: "Аккаунта с этой почтой не существует"})
+            res.status(400).json({msg: "accountEmailAddressNotExist"})
         } else {
            const expirationTime = new Date(userData.codeExpires)
 
             if (expirationTime > new Date()) {
 
                 if (userData.verificationCode != code) {
-                    res.status(400).json({ msg: 'Неверный код подтверждения.' });
+                    res.status(400).json({ msg: 'invalidConfirmationCode' });
                 } else {
 
                     userData.verificationCode = undefined
@@ -355,7 +440,17 @@ router.post('/login/resetpassword/verify', async (req, res) => {
                     await userData.save()
 
                     const token = jwt.sign({id: userData._id}, process.env.JWT_SECRET_KEY, {expiresIn: "24h"})
-                    res.status(200).json({token: token})
+
+                    const isProduction = process.env.SECURE_COOKIE === 'production';
+
+                    res.cookie('token', token, {
+                        httpOnly: true, // Запрещает доступ к куке через свойство document.cookie
+                        secure: isProduction, // process.env.SECURE_COOKIE === 'production', // true только в продакшене
+                        sameSite: isProduction ? 'none' : 'lax', // Для локальной разработки на разных портах
+                        maxAge: 24 * 60 * 60 * 1000 // 24 часа в миллисекундах
+                    });
+
+                    res.status(200).json({msg: 'Пароль успешно обновлён'})
                 }
 
             } else {
@@ -365,7 +460,7 @@ router.post('/login/resetpassword/verify', async (req, res) => {
 
                 await userData.save()
 
-                res.status(400).json({ msg: 'Срок действия кода истёк. Запросите новый код.' });
+                res.status(400).json({ msg: 'codeExpiredRequestNewCode' });
             }
 
         }

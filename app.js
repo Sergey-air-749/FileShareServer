@@ -1,40 +1,31 @@
-const express = require('express')    
-const users = require('./moduls/Users');
-const cors = require('cors')
+const express = require("express");
+const users = require("./moduls/Users");
+const cors = require("cors");
 
-const app = express()
-require('dotenv').config();
-const { createServer } = require('http');
-const { Server } = require('socket.io');
+const app = express();
+require("dotenv").config();
+const { createServer } = require("http");
+const { Server } = require("socket.io");
 
-const connectDB = require('./lib/mongodb')
+const connectDB = require("./lib/mongodb");
 
-const os = require('os');
+const os = require("os");
 
-const emailRoutes = require('./routes/emailRoutes')
-const authRoutes = require('./routes/authRoutes')
-const changeUserData = require('./routes/changeUserData')
-const filesRoutes = require('./routes/filesRoutes')
-const userData = require('./routes/userData')
-const userFileStory = require('./routes/userFileStory');
-
-
-
-
-
+const emailRoutes = require("./routes/emailRoutes");
+const authRoutes = require("./routes/authRoutes");
+const changeUserData = require("./routes/changeUserData");
+const filesRoutes = require("./routes/filesRoutes");
+const userData = require("./routes/userData");
+const userFileStory = require("./routes/userFileStory");
 
 // Важно!
 
 // Почта и всё остальное API работает (auth, userData, changeUserData) на хостиге "vercel" благодаря connectDB()
 // В итоге нет ошибок по типу:
 
-
-
 // {"msg":"No recipients defined"}
 
-// sendVerificationSingUpCode(user.email, code)  ->  await sendVerificationSingUpCode(user.email, code)
-
-
+// sendVerificationSignUpCode(user.email, code)  ->  await sendVerificationSignUpCode(user.email, code)
 
 // Но возникает другая ошибка
 
@@ -42,16 +33,11 @@ const userFileStory = require('./routes/userFileStory');
 
 // Которая решается через connectDB()
 
-
-
 // Но возникла ещё одна ошибка
 
 // Could not connect to any servers in your MongoDB Atlas cluster. One common reason is that you're trying to access the database from an IP that isn't whitelisted. Make sure your current IP address is on your Atlas cluster's IP whitelist:
 
 // Я не правельно настройл connectDB()
-
-
-
 
 // По мелочи
 
@@ -59,19 +45,11 @@ const userFileStory = require('./routes/userFileStory');
 
 //Вроде как всё работает (но я не уверен на сколько стабильно)
 
-
-
-
-
 // обеденить все функции для отправки кода патверждения в один js файл
-
-
-
 
 // sentToUserId - для статусов
 
 // userWillReceiveId - Отмена отправки
-
 
 // Исправел недочот:
 
@@ -80,98 +58,171 @@ const userFileStory = require('./routes/userFileStory');
 
 
 
+async function getCheckUserNameById(userId) {
+
+  const user = await users.findOne({ _id: userId });
+
+
+  let userName = ''
+
+  if (user != null) {
+
+    if (user.isGuest != true && user.isDelete != true) {
+      userName = user.username
+    } else if (user.isDelete == true) {
+      userName = 'Удалённый аккаунт'
+    } else {
+      userName = 'Гость'
+    }
+
+  } else {
+    userName = 'Удалённый аккаунт'
+  }
+
+  return userName
+}
+
 
 
 
 
 async function startMongoDBConnected() {
+  console.log("MongoDB connect...");
 
-    console.log('MongoDB connected...');
-    
+  await connectDB();
+  console.log("MongoDB connected");
 
-    await connectDB()
-    console.log('MongoDB connected')
-    
-    const server = createServer(app);
-    const io = new Server(server, {
-        connectionStateRecovery: {},
-        cors: {
-            // Разрешаем подключения с клиентского домена/порта
-            origin: ["https://fileshare-one-rust.vercel.app"], // <-- Не в коем случи не ставить в конце "/" !!!!!!  //, "http://localhost:3000"
-            methods: ["GET", "POST"],
-        }
-    });
-    
-    
-    io.on('connection', async (socket) => {
-        console.log('a user connected');
-    
-        socket.on('disconnect', () => {
-            console.log('user disconnected');
-        });
-    
-        socket.on('pingfilesUserId', async (id) => {
-            
-            const user = await users.findOne({_id: id}) 
-    
-            socket.join(user.shareId);
-    
-            const files = user.filse
-            
-            io.to(user.shareId).emit("files", files);
-        });
+  const server = createServer(app);
+  const io = new Server(server, {
+    connectionStateRecovery: {},
+    cors: {
+      // Разрешаем подключения с клиентского домена/порта
+      origin: [
+        "https://fileshare-one-rust.vercel.app", // <-- Не в коем случи не ставить в конце "/" !!!!!!  //, "http://localhost:3000"
+      ], 
+      methods: ["GET", "POST"],
+    },
+  });
 
-        socket.on('pingfilesShareId', async (shareId) => {
-            socket.join(shareId);
-             
-            const user = await users.findOne({shareId: shareId}) 
-            const files = user.filse
-            
-            io.to(shareId).emit("files", files);
-        });
-    
-        socket.on('pingfilesUserName', async (username) => {
-             
-            const user = await users.findOne({username: username}) 
-    
-            socket.join(user.shareId);
-    
-            const files = user.filse
-            
-            io.to(user.shareId).emit("files", files);
-        });
-    
+  io.on("connection", async (socket) => {
+    console.log("a user connected");
+
+    socket.on("disconnect", () => {
+      console.log("user disconnected");
     });
 
+    socket.on("pingfilesUserId", async (id) => {
+      console.log("id:", id);
 
-    const allowedOrigins = ["https://fileshare-one-rust.vercel.app", "http://localhost:3000"];
-    
-    app.use(cors({
-        origin: allowedOrigins,
-    }))
+      const user = await users.findOne({ _id: id });
+      socket.join(user.shareId);
 
-    // app.use(cors())
-    
-    app.use(express.json());
-    app.use(express.json({ limit: '1000mb' }));
-    app.use(express.urlencoded({ limit: '1000mb', extended: true }));
-    
-    app.use('/api', emailRoutes, changeUserData, filesRoutes, userData, userFileStory, authRoutes)
-    
-    server.listen(process.env.PORT_API, () => {
-        console.log("API and Soket IO http://localhost:" + process.env.PORT_API);
+      const files = user.filse;
+      let fileDataRendering = files
+
+      for (let i = 0; i < fileDataRendering.length; i++) {
+        let element = fileDataRendering[i];
+        
+        const newSentToUserIdName = await getCheckUserNameById(element.sentToUserId)
+        const newUserWillReceiveId = await getCheckUserNameById(element.userWillReceiveId)
+
+        fileDataRendering[i].sentToUser = newSentToUserIdName
+        fileDataRendering[i].userWillReceive = newUserWillReceiveId
+      }
+
+      io.to(user.shareId).emit("files", fileDataRendering);
     });
-    
-    
 
-    console.log(os.hostname());
-    console.log(os.networkInterfaces());
-    console.log(os.userInfo());
-    console.log(os.version());
-}    
+    console.log("1");
 
-startMongoDBConnected()
+    socket.on("pingfilesShareId", async (shareId) => {
+      console.log("shareId:", shareId);
+      // console.log("timeFormat:", timeFormat);
 
+      const user = await users.findOne({ shareId: shareId });
+      socket.join(shareId);
+
+      const files = user.filse;
+      let fileDataRendering = files
+
+      for (let i = 0; i < fileDataRendering.length; i++) {
+        let element = fileDataRendering[i];
+        
+        const newSentToUserIdName = await getCheckUserNameById(element.sentToUserId)
+        const newUserWillReceiveId = await getCheckUserNameById(element.userWillReceiveId)
+
+        fileDataRendering[i].sentToUser = newSentToUserIdName
+        fileDataRendering[i].userWillReceive = newUserWillReceiveId
+      }
+
+      io.to(shareId).emit("files", fileDataRendering);
+
+      console.log("pingfilesShareId");
+    });
+
+    socket.on("pingfilesUserName", async (username) => {
+
+      const user = await users.findOne({ username: username });
+      socket.join(user.shareId);
+
+      const files = user.filse;
+      let fileDataRendering = files
+
+      for (let i = 0; i < fileDataRendering.length; i++) {
+        let element = fileDataRendering[i];
+        
+        const newSentToUserIdName = await getCheckUserNameById(element.sentToUserId)
+        const newUserWillReceiveId = await getCheckUserNameById(element.userWillReceiveId)
+
+        fileDataRendering[i].sentToUser = newSentToUserIdName
+        fileDataRendering[i].userWillReceive = newUserWillReceiveId
+      }
+
+      io.to(user.shareId).emit("files", fileDataRendering);
+    });
+  });
+
+  const allowedOrigins = [
+    "https://fileshare-one-rust.vercel.app",
+  ];
+
+  app.use(
+    cors({
+      origin: allowedOrigins,
+      credentials: true
+    }),
+  );
+
+  // app.use(cors())
+
+  app.use(express.json());
+  app.use(express.json({ limit: "1000mb" }));
+  app.use(express.urlencoded({ limit: "1000mb", extended: true }));
+
+  app.use(
+    "/api",
+    emailRoutes,
+    changeUserData,
+    filesRoutes,
+    userData,
+    userFileStory,
+    authRoutes,
+  );
+
+  server.listen(process.env.PORT_API, () => {
+    console.log("API and Soket IO http://localhost:" + process.env.PORT_API);
+  });
+
+  console.log(os.hostname());
+  console.log(os.networkInterfaces());
+  console.log(os.userInfo());
+  console.log(os.version());
+  
+  console.log('Production:', process.env.SECURE_COOKIE === 'production');
+
+}
+
+startMongoDBConnected();
 
 // server.listen(process.env.PORT_API, () => {
 //     console.log("Soket IO http://localhost:" + process.env.PORT_API);

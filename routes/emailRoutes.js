@@ -24,50 +24,57 @@ let transporter = nodemailer.createTransport({
 });
 
 
+const { translationsСhangeCode, translationsSignUpCode } = require('./locales')
 
+async function sendVerificationSignUpCode(recipientEmail, code, lang = 'ru') {
+    // Выбираем язык (если пришел неизвестный, падаем на русский)
+    const translation = translationsSignUpCode[lang] || translationsSignUpCode.ru;
 
-async function sendVerificationSingUpCode(recipientEmail, code) {
     let mailOptions = {
-        from: '"Ваше приложение" <no-reply@yourdomain.com>',
+        from: `"${translation.senderName}" <no-reply@yourdomain.com>`,
         to: recipientEmail,
-        subject: 'Подтверждение адреса электронной почты',
-        text: `Ваш код подтверждения: ${code}. Он действует 10 минут.`,
-        html: `<p>Ваш код подтверждения: <b>${code}</b>. Он действует 10 минут.</p>`
+        subject: translation.subject,
+        text: translation.text(code),
+        html: translation.html(code)
     };
-
     
     try {
         await transporter.sendMail(mailOptions);
-        console.log('Код подтверждения отправлен на:', recipientEmail);
+        console.log(`Код подтверждения отправлен на (${lang}):`, recipientEmail);
     } catch (error) {
         console.error('Ошибка при отправке почты:', error);
-        throw new Error('Не удалось отправить код подтверждения');
+        throw new Error('failedToSendTheConfirmationCode');
     }
-
-    // console.log('Письмо отправлено на почту: ' + recipientEmail);
-    
 }
 
-async function sendVerificationСhangeCode(recipientEmail, code) {
-    let mailOptions = {
-        from: '"Ваше приложение" <no-reply@yourdomain.com>',
-        to: recipientEmail,
-        subject: 'Подтверждение адреса электронной почты',
-        text: `Ваш код подтверждения: ${code}. Он действует 10 минут.`,
-        html: `<p>Ваш код подтверждения: <b>${code}</b>. Он действует 10 минут.</p>`
-    };
+async function sendVerificationСhangeCode(recipientEmail, code, lang = 'ru') {
+    // Выбираем язык (если пришел неизвестный, падаем на русский)
+    const translation = translationsСhangeCode[lang] || translationsСhangeCode.ru;
 
+    let mailOptions = {
+        from: `"${translation.senderName}" <no-reply@yourdomain.com>`,
+        to: recipientEmail,
+        subject: translation.subject,
+        text: translation.text(code),
+        html: translation.html(code)
+    };
     
     try {
         await transporter.sendMail(mailOptions);
-        console.log('Код подтверждения отправлен на:', recipientEmail);
+        console.log(`Код подтверждения отправлен на (${lang}):`, recipientEmail);
     } catch (error) {
         console.error('Ошибка при отправке почты:', error);
-        throw new Error('Не удалось отправить код подтверждения');
+        throw new Error('failedToSendTheConfirmationCode');
     }
-
-    // console.log('Письмо отправлено на почту: ' + recipientEmail);
 }
+
+
+
+
+
+
+
+
 
 router.get('/email/test/:email', async (req, res) => {
 
@@ -102,6 +109,11 @@ router.get('/email/test', async (req, res) => {
 })
 
 
+
+
+
+
+
 router.post('/:option/email/verify', authMidelwares, async (req, res) => {
     try {
          
@@ -119,53 +131,58 @@ router.post('/:option/email/verify', authMidelwares, async (req, res) => {
         console.log(expirationTime);
         console.log(new Date());
         
+        if (user != null) {
 
-        if (expirationTime > new Date()) {
-
-            if (user.verificationCode != code) {
-                res.status(400).json({ msg: 'Неверный код подтверждения.' });
+            if (expirationTime > new Date()) {
+    
+                if (user.verificationCode != code) {
+                    res.status(400).json({ msg: 'invalidConfirmationCode' });
+                } else {
+    
+                    user.verificationCode = undefined
+                    user.codeExpires = undefined
+    
+                    if (option == 'change') {
+    
+                        if (user.emailNew != null) {
+    
+                            user.email = user.emailNew
+                            user.emailNew = undefined
+    
+                            await user.save()
+                            res.status(200).json({msg: 'Адрес эл. почты изменён'});
+    
+                        } else {
+                            res.status(500).json({msg: 'somethingWentWrong'});
+                        }
+    
+    
+    
+                    } else if (option == 'signup') {
+    
+                        user.isVerified = undefined
+    
+                        await user.save()
+    
+                        res.status(200).json({msg: 'Пользователь зарегистрирован'});
+    
+                    } else {
+                        res.status(400).json({msg:'verificationErrorPleaseTryAgain'});
+                    }
+                }
+    
             } else {
-
+    
                 user.verificationCode = undefined
                 user.codeExpires = undefined
-
-                if (option == 'change') {
-
-                    if (user.emailNew != null) {
-
-                        user.email = user.emailNew
-                        user.emailNew = undefined
-
-                        await user.save()
-                        res.status(200).json({msg: 'Адрес эл. почты изменён'});
-
-                    } else {
-                        res.status(200).json({msg: 'Что-то пошло не так'});
-                    }
-
-
-
-                } else if (option == 'signup') {
-
-                    user.isVerified = undefined
-
-                    await user.save()
-
-                    res.status(200).json({msg: 'Пользователь зарегистрирован'});
-
-                } else {
-                    res.status(400).json({msg:'Ошибка при вирефикацы, повторите попытку'});
-                }
+    
+                await user.save()
+    
+                res.status(400).json({ msg: 'codeExpiredRequestNewCode' });
             }
 
         } else {
-
-            user.verificationCode = undefined
-            user.codeExpires = undefined
-
-            await user.save()
-
-            res.status(400).json({ msg: 'Срок действия кода истёк. Запросите новый код.' });
+            res.status(500).json({ msg: 'accountEmailAddressNotExist' });
         }
 
     } catch (error) {
@@ -175,13 +192,13 @@ router.post('/:option/email/verify', authMidelwares, async (req, res) => {
 })
 
 
-router.get('/:option/email/new', authMidelwares, async (req, res) => {
+router.get('/:option/email/new/:lang', authMidelwares, async (req, res) => {
     console.log(req.headers);
 
     try {
          
         const userId = req.userId
-        const { option } = req.params
+        const { option, lang } = req.params
         const code = Math.floor(Math.random() * 999999)
 
         const user = await Users.findOne({_id: userId})
@@ -197,14 +214,14 @@ router.get('/:option/email/new', authMidelwares, async (req, res) => {
 
         if (option == 'change') {
 
-            await sendVerificationСhangeCode(user.emailNew, code)
+            await sendVerificationСhangeCode(user.emailNew, code, lang)
 
         } else if (option == 'signup') {
 
-            await sendVerificationSingUpCode(user.email, code)
+            await sendVerificationSignUpCode(user.email, code, lang)
 
         } else {
-            res.status(400).json({msg:'Ошибка при отправке, повторите попытку'});
+            res.status(400).json({msg:'anErrorOccurredWhileSending'});
         }
 
         res.status(200).json({msg:'Новый код отправлен'});
@@ -237,8 +254,12 @@ router.get('/:option/email/cancel', authMidelwares, async (req, res) => {
             user.emailNew = undefined
             await user.save()
 
+        } else if (option == 'signup') {
+
+            await user.save()
+
         } else {
-            res.status(400).json({msg:'Ошибка при отмене, повторите попытку'});
+            res.status(400).json({msg:'errorDuringCancellationPleaseTryAgain'});
         }
 
         // else if (option == 'signup') {

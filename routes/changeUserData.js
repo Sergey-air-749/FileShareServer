@@ -49,23 +49,26 @@ let transporter = nodemailer.createTransport({
     }
 });
 
+const { translationsСhangeCode } = require('./locales')
 
-async function sendVerificationСhangeCode(recipientEmail, code) {
+async function sendVerificationСhangeCode(recipientEmail, code, lang = 'ru') {
+    // Выбираем язык (если пришел неизвестный, падаем на русский)
+    const translation = translationsСhangeCode[lang] || translationsСhangeCode.ru;
+
     let mailOptions = {
-        from: '"Ваше приложение" <no-reply@yourdomain.com>',
+        from: `"${translation.senderName}" <no-reply@yourdomain.com>`,
         to: recipientEmail,
-        subject: 'Подтверждение смены адреса электронной почты',
-        text: `Ваш код подтверждения: ${code}. Он действует 10 минут.`,
-        html: `<p>Ваш код подтверждения: <b>${code}</b>. Он действует 10 минут.</p>`
+        subject: translation.subject,
+        text: translation.text(code),
+        html: translation.html(code)
     };
-
     
     try {
         await transporter.sendMail(mailOptions);
-        console.log('Код подтверждения отправлен на:', recipientEmail);
+        console.log(`Код подтверждения отправлен на (${lang}):`, recipientEmail);
     } catch (error) {
         console.error('Ошибка при отправке почты:', error);
-        throw new Error('Не удалось отправить код подтверждения');
+        throw new Error('failedToSendTheConfirmationCode');
     }
 }
 
@@ -84,6 +87,8 @@ router.post('/change/avatar/default', authMidelwares, async (req, res) => {
         }
 
         await user.save()
+
+        res.status(200).json({msg: 'Аватарка сброшена к стандартной'})
         
     } catch (error) {
         console.log(error);
@@ -182,6 +187,11 @@ router.post('/change/avatar', uploadAvatar.single('avatar'), authMidelwares, asy
     try {
 
         const { v } = req.body
+
+        console.log('\n' + '=====================================================================' + '\n');
+        console.log(req.body);
+        console.log('\n' + '=====================================================================' + '\n');
+        
         
         const userId = req.userId
         // req.file.originalname = userId + '.png'
@@ -190,8 +200,18 @@ router.post('/change/avatar', uploadAvatar.single('avatar'), authMidelwares, asy
 
         let format = ''
 
+        console.log('\n' + '=====================================================================' + '\n');
+
         console.log(req.file);
 
+        console.log('\n' + '=====================================================================' + '\n');
+
+        console.log(lastDotIndex);
+        console.log(lastDotIndex === -1);
+        console.log(lastDotIndex === 0);
+        console.log(lastDotIndex === -1 || lastDotIndex === 0);
+
+        console.log('\n' + '=====================================================================' + '\n');
 
         if (lastDotIndex === -1 || lastDotIndex === 0) {
             format = 'png'
@@ -254,6 +274,8 @@ router.put('/change/email', authMidelwares, async (req, res) => {
     console.log(req.body);
     console.log(req.headers);
 
+    const { lang } = req.body
+
     try {
          
         const userId = req.userId
@@ -273,11 +295,11 @@ router.put('/change/email', authMidelwares, async (req, res) => {
             user.emailNew = emailNew
             await user.save()
 
-            await sendVerificationСhangeCode(user.emailNew, code)
+            await sendVerificationСhangeCode(user.emailNew, code, lang)
 
             res.status(200).json({msg:'Код отправлен'});   
         } else {
-            res.status(400).json({msg: "Пользователь с такой почтой уже существует"})
+            res.status(400).json({msg: "aUserEmailAlreadyExists"})
         }
 
     } catch (error) {
@@ -299,13 +321,21 @@ router.put('/change/username', authMidelwares, async (req, res) => {
         const userId = req.userId
         const { usernameNew } = req.body
 
-        const user = await Users.findOne({_id: userId})
-        console.log(user);
+        const findUserByName = await Users.findOne({username: usernameNew})
+        console.log(findUserByName);
 
-        user.username = usernameNew
-        await user.save()
-
-        res.status(200).json({msg:'Имя пользователя изменина'});
+        if (findUserByName == null) {
+            const user = await Users.findOne({_id: userId})
+            console.log(user);
+    
+            user.username = usernameNew
+            await user.save()
+    
+            res.status(200).json({msg:'Имя пользователя изменина'});
+        } else {
+            res.status(500).json({msg: 'userNameIsTaken'});
+        }
+        
     } catch (error) {
         console.log(error);
         res.status(500).json({msg: error.message})
@@ -339,7 +369,7 @@ router.put('/change/password', authMidelwares, async (req, res) => {
             res.status(200).json({msg:'Пароль изменён'});
 
         } else {
-            res.status(400).json({msg: "Не верный пароль"})
+            res.status(400).json({msg: "incorrectPassword"})
         }
 
     } catch (error) {

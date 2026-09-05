@@ -1,536 +1,490 @@
-const express = require('express')  
-const router = express.Router()
-require('dotenv').config();
-const path = require('path');
-const { 
-    S3Client,
-    GetObjectCommand,
-    PutObjectCommand,
-    DeleteObjectCommand,
-    ListObjectsV2Command,
-} = require('@aws-sdk/client-s3')
+const express = require("express");
+const router = express.Router();
+require("dotenv").config();
+const path = require("path");
+const {
+  S3Client,
+  GetObjectCommand,
+  PutObjectCommand,
+  DeleteObjectCommand,
+  ListObjectsV2Command,
+} = require("@aws-sdk/client-s3");
 
-const { getSignedUrl } = require('@aws-sdk/s3-request-presigner')
-const multerS3 = require('multer-s3')
+const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
+const multerS3 = require("multer-s3");
 
-const Users = require('../moduls/Users')
+const Users = require("../moduls/Users");
 
-const authMidelwares = require('../midelwares/authMidelwares')
-const multer = require('multer');
+const authMidelwares = require("../midelwares/authMidelwares");
+const multer = require("multer");
 const cron = require("node-cron");
 
-const connectDB = require('../lib/mongodb')
-
+const connectDB = require("../lib/mongodb");
 
 const s3Client = new S3Client({
-    region: process.env.region,
-    credentials: {
-      accessKeyId: process.env.accessKeyId,
-      secretAccessKey: process.env.secretAccessKey,
-    }
-})
-
-
-
-
-
+  region: process.env.region,
+  credentials: {
+    accessKeyId: process.env.accessKeyId,
+    secretAccessKey: process.env.secretAccessKey,
+  },
+});
 
 const generateFilename = (fileName) => {
-    const randomNameId = Math.floor(Math.random() * 9999999999)
+  const randomNameId = Math.floor(Math.random() * 9999999999);
 
-    const lastDotIndex = fileName.lastIndexOf('.');
+  const lastDotIndex = fileName.lastIndexOf(".");
 
-    if (lastDotIndex === -1 || lastDotIndex === 0) {
-        return `${fileName} (${randomNameId})`;
-    }
+  if (lastDotIndex === -1 || lastDotIndex === 0) {
+    return `${fileName} (${randomNameId})`;
+  }
 
-    const fileNameUTFNotExtension = fileName.substring(0, lastDotIndex)
-    const fileExtension = fileName.substring(lastDotIndex + 1)
+  const fileNameUTFNotExtension = fileName.substring(0, lastDotIndex);
+  const fileExtension = fileName.substring(lastDotIndex + 1);
 
-    console.log(`${fileName}${randomNameId}.${fileExtension}`);
-    return `${fileNameUTFNotExtension} (${randomNameId}).${fileExtension}`;
-}
-
+  console.log(`${fileName}${randomNameId}.${fileExtension}`);
+  return `${fileNameUTFNotExtension} (${randomNameId}).${fileExtension}`;
+};
 
 // Ты зарание позоботился о том с каким названиям будут сохраниться
-// поэтому в будующем в "/fileLoad/:id/" upload.array('files') req.files 
+// поэтому в будующем в "/fileLoad/:id/" upload.array('files') req.files
 // возвращает файлы с изменённым названием
 
 const uploadS3 = multer({
   storage: multerS3({
     s3: s3Client,
-    bucket: 'sergay-air-bucket-one',
+    bucket: "sergay-air-bucket-one",
 
     key: function (req, file, cb) {
-      console.log(req);
-      
-      const fileNameUTF = Buffer.from(file.originalname, 'latin1').toString('utf8');
+      // console.log(req);
+
+      const fileNameUTF = Buffer.from(file.originalname, "latin1").toString(
+        "utf8",
+      );
       console.log(fileNameUTF);
 
-      const fileName = generateFilename(fileNameUTF)
+      const fileName = generateFilename(fileNameUTF);
       console.log(fileName);
-      
-      cb(null, file.originalname = fileName);
-      cb(null, file.key = 'files/' + fileName);
-      console.log('key');
+
+      cb(null, (file.originalname = fileName));
+      cb(null, (file.key = "files/" + fileName));
+      console.log("key");
       console.log(file);
     },
-
-  })
-})
-
-
-
-router.post('/fileLoad/:id/', uploadS3.array('files'), authMidelwares, async (req, res) => {
-    try {
-         
-
-        const userId = req.userId
-    
-        const { id } = req.params
-        const { sentToUserId, data, device, username } = req.body
-
-        console.log(id);  
-        console.log(device);  
-        console.log(data);  
-        console.log(username);
-
-        console.log(req.files);
-
-        const userWillReceive = await Users.findOne({shareId: id})
-        const sentToUser = await Users.findOne({_id: userId})
-
-        let userWillReceiveName = ''
-
-        if (userWillReceive.username != undefined) {
-            userWillReceiveName = userWillReceive.username
-        } else {
-            userWillReceiveName = 'Гость'
-        }
-
-        let filseStorySendNew = sentToUser.filseStorySend
-
-        const expirationTime = new Date();
-        expirationTime.setDate(expirationTime.getDate() + 14);
-
-        req.files.forEach((item, index) => {
-
-            const obj = {
-                id: Math.floor(Math.random() * 9999999999),
-                filename: item.originalname,
-                sentFromDevice: device,
-                data: data,
-                status: 'sent',
-                sentToUserId: sentToUserId,
-                sentToUser: username,
-                userWillReceiveId: userWillReceive._id,
-                userWillReceive: userWillReceiveName,
-                expirationTime: expirationTime
-            }
-
-            // console.log(obj);
-
-            userWillReceive.filse.unshift(obj)
-            filseStorySendNew.unshift(obj)
-            console.log(sentToUser.filseStorySend);
-        })
-
-
-        // sentToUser.save() в данном случае не подходил, и выдавал ошибку
-        // Поэтому пришлось использовать findByIdAndUpdate
-
-        // console.log(user);
-        await userWillReceive.save()
-        await Users.findByIdAndUpdate({_id: userId}, {filseStorySend: filseStorySendNew})
-
-
-        res.status(200).send({msg:'Файлы успешно загружены!'});
-    } catch (error) {
-        console.log(error);
-        res.status(500).json({msg: error.message})
-    }
+  }),
 });
 
-
-
-
-
-
-
-
-router.post('/textLoad/:id', authMidelwares, async (req, res) => {
-
-    console.log(req.body);
-
+router.post("/fileLoad/:id/", uploadS3.array("files"), authMidelwares, async (req, res) => {
     try {
-         
-        const { id } = req.params
-        const { sentToUserId, textValue, data, device, username } = req.body
-        const userId = req.userId
+      const userId = req.userId;
 
-        
-        const userWillReceive = await Users.findOne({shareId: id})
-        const sentToUser = await Users.findOne({_id: userId})
+      const { id } = req.params;
+      const { sentToUserId, data, device, username, size } = req.body;
 
-        let filseStorySendNew = sentToUser.filseStorySend
-        
-        const expirationTime = new Date();
-        expirationTime.setDate(expirationTime.getDate() + 14);
+      console.log(id);
+      console.log(device);
+      console.log(data);
+      console.log(username);
+      console.log(size);
 
-        let userWillReceiveName = ''
+      console.log(req.files);
 
-        if (userWillReceive.username != undefined) {
-            userWillReceiveName = userWillReceive.username
-        } else {
-            userWillReceiveName = 'Гость'
-        }
+      const userWillReceive = await Users.findOne({ shareId: id });
+      const sentToUser = await Users.findOne({ _id: userId });
 
+      let userWillReceiveName = "";
+
+      if (userWillReceive.username != undefined) {
+        userWillReceiveName = userWillReceive.username;
+      } else {
+        userWillReceiveName = "Гость";
+      }
+
+      let filseStorySendNew = sentToUser.filseStorySend;
+
+      const expirationTime = new Date();
+      expirationTime.setDate(expirationTime.getDate() + 14);
+
+      req.files.forEach((item, index) => {
         const obj = {
-            id: Math.floor(Math.random() * 9999999999),
-            text: textValue,
-            sentFromDevice: device,
-            data: data,
-            status: 'sent',
-            sentToUserId: sentToUserId,
-            sentToUser: username,
-            userWillReceiveId: userWillReceive._id,
-            userWillReceive: userWillReceiveName,
-            expirationTime: expirationTime
-        }
+          id: Math.floor(Math.random() * 9999999999),
+          filename: item.originalname,
+          sentFromDevice: device,
+          data: JSON.parse(data),
+          status: "sent",
+          sentToUserId: sentToUserId,
+          sentToUser: username,
+          userWillReceiveId: userWillReceive._id,
+          userWillReceive: userWillReceiveName,
+          expirationTime: expirationTime,
+          size: item.size,
+        };
 
-        userWillReceive.filse.unshift(obj)
-        filseStorySendNew.unshift(obj)
+        // console.log(item);
+
+        userWillReceive.filse.unshift(obj);
+        filseStorySendNew.unshift(obj);
+        console.log('\nsentToUser.filseStorySend:');
         console.log(sentToUser.filseStorySend);
+      });
 
-        // sentToUser.save() в данном случае не подходил, и выдавал ошибку
-        // Поэтому пришлось использовать findByIdAndUpdate
+      // sentToUser.save() в данном случае не подходил, и выдавал ошибку
+      // Поэтому пришлось использовать findByIdAndUpdate
 
-        console.log(userWillReceive);
-        await userWillReceive.save()
-        await Users.findByIdAndUpdate({_id: userId}, {filseStorySend: filseStorySendNew})
+      // console.log(user);
+      await userWillReceive.save();
+      await Users.findByIdAndUpdate(
+        { _id: userId },
+        { filseStorySend: filseStorySendNew },
+      );
 
-        res.status(200).send({msg:'Текст успешно загружены!'});
+      res.status(200).send({ msg: "Файлы успешно загружены!" });
     } catch (error) {
-        console.log(error);
-        res.status(500).json({msg: error.message})
+      console.log(error);
+      res.status(500).json({ msg: error.message });
     }
+  },
+);
+
+router.post("/textLoad/:id", authMidelwares, async (req, res) => {
+  console.log(req.body);
+
+  try {
+    const { id } = req.params;
+    const { sentToUserId, textValue, data, device, username, size } = req.body;
+    const userId = req.userId;
+
+    const userWillReceive = await Users.findOne({ shareId: id });
+    const sentToUser = await Users.findOne({ _id: userId });
+
+    let filseStorySendNew = sentToUser.filseStorySend;
+
+    const expirationTime = new Date();
+    expirationTime.setDate(expirationTime.getDate() + 14);
+
+    let userWillReceiveName = "";
+
+    if (userWillReceive.username != undefined) {
+      userWillReceiveName = userWillReceive.username;
+    } else {
+      userWillReceiveName = "Гость";
+    }
+
+    const obj = {
+      id: Math.floor(Math.random() * 9999999999),
+      text: textValue,
+      sentFromDevice: device,
+      data: JSON.parse(data),
+      status: "sent",
+      sentToUserId: sentToUserId,
+      sentToUser: username,
+      userWillReceiveId: userWillReceive._id,
+      userWillReceive: userWillReceiveName,
+      expirationTime: expirationTime,
+      size: size,
+    };
+
+    userWillReceive.filse.unshift(obj);
+    filseStorySendNew.unshift(obj);
+    console.log(sentToUser.filseStorySend);
+
+    // sentToUser.save() в данном случае не подходил, и выдавал ошибку
+    // Поэтому пришлось использовать findByIdAndUpdate
+
+    console.log(userWillReceive);
+    await userWillReceive.save();
+    await Users.findByIdAndUpdate(
+      { _id: userId },
+      { filseStorySend: filseStorySendNew },
+    );
+
+    res.status(200).send({ msg: "Текст успешно загружены!" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ msg: error.message });
+  }
 });
-
-
-
-
 
 // Скачивание файла и перемещение в историю
 
-router.get('/getDownloadNew/:option/:shareId/:fileId', async (req, res) => {
-    try {
-         
-        console.log(req.params);
-        
-        const { shareId, fileId, option } = req.params
+// Изметить путь
 
-        // Ищет пользователя который хочет скачать файл
-    
-        const userShareId = await Users.findOne({shareId: shareId})
-        const filse = userShareId.filse
+router.get("/getDownload/:option/:shareId/:fileId", async (req, res) => {
+  try {
+    console.log(req.params);
 
-        // Проверяет существует ли этот файл,
+    const { shareId, fileId, option } = req.params;
 
-        const getFile = filse.find((item) => item.id == fileId)
-        const deleteFile = filse.filter((item) => item.id != fileId)
-        
-        console.log('getFile: ', getFile);
-        console.log('deleteFile: ', deleteFile); 
-        
-        if (option == 'file') {
+    // Ищет пользователя который хочет скачать файл
 
-            if (getFile != undefined) {
+    const userShareId = await Users.findOne({ shareId: shareId });
+    console.log(userShareId);
+    const filse = userShareId.filse;
 
-                // использовать здесь .save() бесполезно записи не происходят
+    // Проверяет существует ли этот файл,
 
-                // Пльзователь принял файл, запись в историю получении
+    const getFile = filse.find((item) => item.id == fileId);
+    const deleteFile = filse.filter((item) => item.id != fileId);
 
-                getFile.status = 'accepted'
-                let filseStoryGetNew = userShareId.filseStoryGet
-                filseStoryGetNew.unshift(getFile)
-                userShareId.filse = deleteFile
+    console.log("getFile: ", getFile);
+    console.log("deleteFile: ", deleteFile);
 
-                await Users.findOneAndUpdate({shareId: shareId}, {filseStoryGet: filseStoryGetNew, filse: deleteFile})
+    if (option == "file") {
+      if (getFile != undefined) {
+        // использовать здесь .save() бесполезно записи не происходят
 
-                
+        // Пльзователь принял файл, запись в историю получении
 
-                // переписываем статус файла, для отправителя
+        getFile.status = "accepted";
+        let filseStoryGetNew = userShareId.filseStoryGet;
+        filseStoryGetNew.unshift(getFile);
+        userShareId.filse = deleteFile;
 
-                const sentToUserId = await Users.findOne({_id: getFile.sentToUserId})
-                const filseStorySendNew = sentToUserId.filseStorySend
-                
-                const reStatus = filseStorySendNew.find(file => file.id == fileId)
+        await Users.findOneAndUpdate(
+          { shareId: shareId },
+          { filseStoryGet: filseStoryGetNew, filse: deleteFile },
+        );
 
-                reStatus.status = 'accepted'
-                await Users.findOneAndUpdate({_id: getFile.sentToUserId}, {filseStorySend: filseStorySendNew})
-                console.log(filseStorySendNew);
+        // переписываем статус файла, для отправителя
 
-                console.log(sentToUserId);
-                
+        const sentToUserId = await Users.findOne({ _id: getFile.sentToUserId });
+        const filseStorySendNew = sentToUserId.filseStorySend;
 
-                const command = new GetObjectCommand({
-                    Bucket: 'sergay-air-bucket-one',
-                    Key: 'files/' + getFile.filename
-                })
+        const reStatus = filseStorySendNew.find((file) => file.id == fileId);
 
-                const url = await getSignedUrl(s3Client, command) 
+        reStatus.status = "accepted";
+        await Users.findOneAndUpdate(
+          { _id: getFile.sentToUserId },
+          { filseStorySend: filseStorySendNew },
+        );
+        console.log(filseStorySendNew);
 
-                res.send({url: url});
-            } else {
-                res.send({msg:'Файл не найден'});
-            }            
+        console.log(sentToUserId);
 
-        } else if (option == 'text') {
+        const command = new GetObjectCommand({
+          Bucket: "sergay-air-bucket-one",
+          Key: "files/" + getFile.filename,
+        });
 
-            if (getFile != undefined) {
+        //
 
+        const url = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
 
-                // использовать здесь .save() бесполезно записи не происходят
+        res.send({ url: url });
+      } else {
+        res.send({ msg: "fileNotFound" });
+      }
+    } else if (option == "text") {
+      if (getFile != undefined) {
+        // использовать здесь .save() бесполезно записи не происходят
 
-                // Пльзователь принял файл, запись в историю получении
+        // Пльзователь принял файл, запись в историю получении
 
-                getFile.status = 'accepted'
-                let filseStoryGetNew = userShareId.filseStoryGet
-                filseStoryGetNew.unshift(getFile)
-                userShareId.filse = deleteFile
+        getFile.status = "accepted";
+        let filseStoryGetNew = userShareId.filseStoryGet;
+        filseStoryGetNew.unshift(getFile);
+        userShareId.filse = deleteFile;
 
-                await Users.findOneAndUpdate({shareId: shareId}, {filseStoryGet: filseStoryGetNew, filse: deleteFile})
+        await Users.findOneAndUpdate(
+          { shareId: shareId },
+          { filseStoryGet: filseStoryGetNew, filse: deleteFile },
+        );
 
+        // переписываем статус файла, для отправителя
 
-                // переписываем статус файла, для отправителя
+        const sentToUserId = await Users.findOne({ _id: getFile.sentToUserId });
+        const filseStorySendNew = sentToUserId.filseStorySend;
 
-                const sentToUserId = await Users.findOne({_id: getFile.sentToUserId})
-                const filseStorySendNew = sentToUserId.filseStorySend
-                
-                const reStatus = filseStorySendNew.find(file => file.id == fileId)
+        const reStatus = filseStorySendNew.find((file) => file.id == fileId);
 
-                reStatus.status = 'accepted'
-                await Users.findOneAndUpdate({_id: getFile.sentToUserId}, {filseStorySend: filseStorySendNew})
-                console.log(filseStorySendNew);
+        reStatus.status = "accepted";
+        await Users.findOneAndUpdate(
+          { _id: getFile.sentToUserId },
+          { filseStorySend: filseStorySendNew },
+        );
+        console.log(filseStorySendNew);
 
-
-
-                res.send({msg:'Текст принет'});
-            } else {
-                res.send({msg:'Текст не найден'});
-            }
-
-        }
-
-    } catch (error) {
-        console.log(error);  
-        res.status(500).send(error);
+        res.send({ msg: "Текст принет" });
+      } else {
+        res.send({ msg: "textNotFound" });
+      }
     }
+  } catch (error) {
+    console.log(error);
+    res.status(500).send(error);
+  }
 });
 
+router.post("/files/cancel/:shareId", authMidelwares, async (req, res) => {
+  try {
+    const { shareId } = req.params;
+    const userId = req.userId;
 
+    const user = await Users.findOne({ _id: userId });
 
-
-
-
-
-
-
-router.post('/files/cancel/:shareId',authMidelwares, async (req, res) => {
-    try {
-         
-        const { shareId } = req.params
-        const userId = req.userId
-
-        const user = await Users.findOne({_id: userId})
-
-        if (!user) {
-            return res.status(404).send({ msg: 'Пользователь не найден' })
-        }
-
-        if (user.shareId == shareId) {
-
-            for (const file of user.filse) {
-
-                const sentToUser = await Users.findOne({_id: file.sentToUserId})
-                let filseStorySendNew = sentToUser.filseStorySend
-
-                if (sentToUser != null) {
-            
-                    const newFilseFind = filseStorySendNew.find((item) => item.id == id)
-                    
-                    console.log('newFilseFind ', newFilseFind);
-
-                    if (sentToUser != null) {
-                        newFilseFind.status = 'refusal'
-                        console.log('filseStorySendNew ', filseStorySendNew);
-                        
-                        await Users.findOneAndUpdate({_id: file.sentToUserId}, {filseStorySend: filseStorySendNew})
-                    } else {
-                    
-                    }
-
-                } else {
-                    
-                }
-
-
-            }
-
-            await user.save()
-            
-            res.send({msg: 'Загрузка отменена'}); 
-        } else {
-            res.status(500).send({msg: 'Ошибка Что-то пошло не так'}); 
-        }
-
-    } catch (error) {
-        console.log(error);  
-        res.send(error);
+    if (!user) {
+      res.status(404).send({ msg: "userNotFound" });
     }
-});
 
-
-router.post('/files/cancel/:shareId/:id', authMidelwares, async (req, res) => {
-    try {
-         
-
-        const { shareId, id } = req.params
-        console.log(req.params)
-        const userId = req.userId
+    if (user.shareId == shareId) {
+      // for (let i = 0; i < user.filse;) {
+      for (const file of user.filse) {
+        const sentToUser = await Users.findOne({ _id: file.sentToUserId });
         
-        const user = await Users.findOne({_id: userId})
+        if (sentToUser != null) {
+          let filseStorySendNew = sentToUser.filseStorySend;
 
-        if (!user) {
-            return res.status(404).send({ msg: 'Пользователь не найден' })
-        }
+          console.log('filseStorySendNew: ', filseStorySendNew);
 
-        if (user.shareId == shareId) {
+          const newFilseFind = filseStorySendNew.find((item) => item.id == file.id);
 
-            const newFilseFind = user.filse.find((item) => item.id == id)
-            const newFilseFilter = user.filse.filter((item) => item.id != id)
+          console.log("newFilseFind: ", newFilseFind);
+          newFilseFind.status = "refusal";
+          console.log("newFilseFind, refusal: ", newFilseFind);
 
-            const sentToUser = await Users.findOne({_id: newFilseFind.sentToUserId})
-            console.log(sentToUser);
-            let filseStorySendNew = sentToUser.filseStorySend
-            console.log('filseStorySend', filseStorySendNew);
-            
-            if (sentToUser != null) {
-            
-                const newFilseFind = filseStorySendNew.find((item) => item.id == id)
-                
-                console.log('newFilseFind ', newFilseFind);
-
-                if (sentToUser != null) {
-                    newFilseFind.status = 'refusal'
-                    console.log('filseStorySendNew ', filseStorySendNew);
-                    
-                    await Users.findOneAndUpdate({_id: newFilseFind.sentToUserId}, {filseStorySend: filseStorySendNew})
-                } else {
-                    res.status(500).send({msg: 'Отпровитель файла не найден'}); 
-                }
-
-            } else {
-                
-            }
-
-            await Users.findOneAndUpdate({_id: userId}, {filse: newFilseFilter})
+          await Users.findOneAndUpdate(
+            { _id: file.sentToUserId },
+            { filseStorySend: filseStorySendNew },
+          );
 
         } else {
-            res.status(500).send({msg: 'Ошибка Что-то пошло не так'}); 
+          res.status(500).send({ msg: "fileSenderNotFound" });
         }
-        
-        res.send({msg: 'Загрузка отменена'});
-    } catch (error) {
-        console.log(error);  
-        res.send(error);
+      }
+
+      user.filse = []
+
+      await user.save();
+
+      res.status(200).send({ msg: "Загрузка отменена" });
+    } else {
+      res.status(500).send({ msg: "somethingWentWrong" });
     }
+  } catch (error) {
+    console.log(error);
+    res.send(error);
+  }
 });
 
+router.post("/files/cancel/:shareId/:id", authMidelwares, async (req, res) => {
+  try {
+    const { shareId, id } = req.params;
+    console.log(req.params);
+    const userId = req.userId;
 
+    const user = await Users.findOne({ _id: userId });
 
+    if (!user) {
+      res.status(404).send({ msg: "userNotFound" });
+    }
 
+    if (user.shareId == shareId) {
+      const newFilseFind = user.filse.find((item) => item.id == id);
+      const newFilseFilter = user.filse.filter((item) => item.id != id);
+
+      if (newFilseFind == undefined) {
+        res.status(500).send({ msg: "fileNotFound" });
+      }
+
+      const sentToUser = await Users.findOne({
+        _id: newFilseFind.sentToUserId,
+      });
+      console.log(sentToUser);
+      
+
+      if (sentToUser != null) {
+
+        let filseStorySendNew = sentToUser.filseStorySend;
+        console.log("filseStorySend", filseStorySendNew);
+        const newFilseFind = filseStorySendNew.find((item) => item.id == id);
+
+        console.log("newFilseFind ", newFilseFind);
+
+        newFilseFind.status = "refusal";
+        console.log("filseStorySendNew ", filseStorySendNew);
+
+        await Users.findOneAndUpdate(
+          { _id: newFilseFind.sentToUserId },
+          { filseStorySend: filseStorySendNew },
+        );
+        
+      } else {
+        res.status(500).send({ msg: "fileSenderNotFound" });
+      }
+
+      await Users.findOneAndUpdate({ _id: userId }, { filse: newFilseFilter });
+    } else {
+      res.status(500).send({ msg: "somethingWentWrong" });
+    }
+
+    res.status(200).send({ msg: "Загрузка отменена" });
+  } catch (error) {
+    console.log(error);
+    res.send(error);
+  }
+});
 
 cron.schedule("0 0 * * * *", async () => {
-    try {
-         
-        const users = await Users.find()
+  try {
+    const users = await Users.find();
 
-        for (const user of users) {
+    for (const user of users) {
+      const newFilesDelete = [];
 
-            const newFilesDelete = [];
+      //filse
+      for (const file of user.filse) {
+        const expirationTime = new Date(file.expirationTime);
 
-            //filse
-            for (const file of user.filse) {
+        if (expirationTime < new Date()) {
+          const command = new DeleteObjectCommand({
+            Bucket: "sergay-air-bucket-one",
+            Key: "files/" + file.filename,
+          });
 
-                const expirationTime = new Date(file.expirationTime)
-                
-                if (expirationTime < new Date()) {
+          await s3Client.send(command);
 
-                    const command = new DeleteObjectCommand({
-                        Bucket: 'sergay-air-bucket-one',
-                        Key: 'files/' + file.filename
-                    })
-
-                    await s3Client.send(command)
-
-                    console.log("Файл удалён:", file.filename);
-                } else {
-                    newFilesDelete.push(file);
-                }
-
-            }
-
-            //filseStorySend
-            for (const file of user.filseStorySend) {
-
-                const expirationTime = new Date(file.expirationTime)
-                
-                if (expirationTime < new Date()) {
-
-                    const command = new DeleteObjectCommand({
-                        Bucket: 'sergay-air-bucket-one',
-                        Key: 'files/' + file.filename
-                    })
-
-                    await s3Client.send(command)
-
-                    console.log("Файл удалён:", file.filename);
-                }
-
-            }
-
-            for (const file of user.filseStoryGet) {
-
-                const expirationTime = new Date(file.expirationTime)
-                
-                if (expirationTime < new Date()) {
-
-                    const command = new DeleteObjectCommand({
-                        Bucket: 'sergay-air-bucket-one',
-                        Key: 'files/' + file.filename
-                    })
-
-                    await s3Client.send(command)
-
-                    console.log("Файл удалён:", file.filename);
-                }
-
-            }
-
-            user.filse = newFilesDelete
-            await user.save();
-            
+          console.log("Файл удалён:", file.filename);
+        } else {
+          newFilesDelete.push(file);
         }
+      }
 
-    } catch (error) {
-        console.log(error);   
+      //filseStorySend
+      for (const file of user.filseStorySend) {
+        const expirationTime = new Date(file.expirationTime);
+
+        if (expirationTime < new Date()) {
+          const command = new DeleteObjectCommand({
+            Bucket: "sergay-air-bucket-one",
+            Key: "files/" + file.filename,
+          });
+
+          await s3Client.send(command);
+
+          console.log("Файл удалён:", file.filename);
+        }
+      }
+
+      for (const file of user.filseStoryGet) {
+        const expirationTime = new Date(file.expirationTime);
+
+        if (expirationTime < new Date()) {
+          const command = new DeleteObjectCommand({
+            Bucket: "sergay-air-bucket-one",
+            Key: "files/" + file.filename,
+          });
+
+          await s3Client.send(command);
+
+          console.log("Файл удалён:", file.filename);
+        }
+      }
+
+      user.filse = newFilesDelete;
+      await user.save();
     }
+  } catch (error) {
+    console.log(error);
+  }
 });
-
-
-
-
-
 
 module.exports = router;
