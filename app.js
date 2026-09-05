@@ -98,7 +98,7 @@ async function startMongoDBConnected() {
     cors: {
       // Разрешаем подключения с клиентского домена/порта
       origin: [
-        "https://fileshare-one-rust.vercel.app", // <-- Не в коем случи не ставить в конце "/" !!!!!!  //, "http://localhost:3000"
+        "https://fileshareclient.netlify.app", // <-- Не в коем случи не ставить в конце "/" !!!!!!  //, "http://localhost:3000"
       ], 
       methods: ["GET", "POST"],
     },
@@ -183,7 +183,7 @@ async function startMongoDBConnected() {
   });
 
   const allowedOrigins = [
-    "https://fileshareclient.netlify.app/sendfile",
+    "https://fileshareclient.netlify.app",
   ];
 
   app.use(
