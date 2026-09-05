@@ -183,7 +183,7 @@ async function startMongoDBConnected() {
   });
 
   const allowedOrigins = [
-    "https://fileshare-one-rust.vercel.app",
+    "https://fileshareclient.netlify.app/sendfile",
   ];
 
   app.use(
