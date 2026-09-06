@@ -182,13 +182,13 @@ async function startMongoDBConnected() {
     });
   });
 
-  const allowedOrigins = [
-    "https://fileshareclient.netlify.app",
-  ];
-
   app.use(
     cors({
-      origin: allowedOrigins,
+      origin: [
+        "https://fileshareclient.netlify.app",
+        "https://fileshare-one-rust.vercel.app",
+        "https://fileshareclientv2.onrender.com",
+      ],
       credentials: true
     }),
   );
