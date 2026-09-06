@@ -98,7 +98,9 @@ async function startMongoDBConnected() {
     cors: {
       // Разрешаем подключения с клиентского домена/порта
       origin: [
-        "https://fileshareclient.netlify.app", // <-- Не в коем случи не ставить в конце "/" !!!!!!  //, "http://localhost:3000"
+        "https://fileshareclient.netlify.app",
+        "https://fileshare-one-rust.vercel.app",
+        "https://fileshareclientv2.onrender.com", // <-- Не в коем случи не ставить в конце "/" !!!!!!  //, "http://localhost:3000"
       ], 
       methods: ["GET", "POST"],
     },
